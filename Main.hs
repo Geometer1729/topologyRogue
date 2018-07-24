@@ -17,6 +17,7 @@ handleEvent :: Event -> TestWorld -> TestWorld
 handleEvent (EventKey k down mods f@(x,y)) t = case k of
                                               (Char m) -> if isDown down then trace (show m) t  else t
                                               (MouseButton LeftButton) -> trace (show x ++ "," ++ show y) t
+                                              (SpecialKey _) -> t
 handleEvent _ t = t
 
 stepWorld :: Float -> TestWorld -> TestWorld

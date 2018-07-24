@@ -37,3 +37,6 @@ rollingDups::Space->[Object]->[Object]
 rollingDups ((b,r):ns) o = if colides then concat $ map (\x -> [x,mapPts r x ]) o else rollingDups ns o
   where
     colides = or . (map b) . getPts . concat $ o :: Bool
+
+spaceDraw::Space->Object->Picture
+spaceDraw s o = Pictures . (map objectToPicture) $ dups s o

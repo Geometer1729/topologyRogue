@@ -13,7 +13,7 @@ type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
 testob::Object
-testob =[([(10,10),(10,80),(80,80)],black),([(100,100),(100,180),(180,180)],red)]
+testob =[([(-50,0),(0,50),(50,0)],black),([(-30,-5),(0,70),(30,-5)],red)]
 
 objectToPicture :: Object -> Picture
 objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ Polygon xs) o

@@ -34,6 +34,7 @@ dups::Space->Object->[Object] -- takes a space and an object produces a list of 
 dups s o = rollingDups s [o]
 
 rollingDups::Space->[Object]->[Object]
+rollingDups [] o = o
 rollingDups ((b,r):ns) o = if colides then concat $ map (\x -> [x,mapPts r x ]) o else rollingDups ns o
   where
     colides = or . (map b) . getPts . concat $ o :: Bool

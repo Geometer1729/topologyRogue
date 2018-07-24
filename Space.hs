@@ -4,40 +4,46 @@ import           Object
 
 type Space = [(Boundry,Rule)]
 
-type Boundry = Point -> Bool
+type Boundry = Location -> Bool
 
-type Rule = Point -> Point
+type Rule = Location -> Location
+
+still::Location
+still = ((0,0),(False,0))
+
+vecToLoc::Point->Location
+vecToLoc x = (x,(False,0))
 
 wrapX::Float -> Float -> Space
-wrapX l h = [ ( (\ (x,y) -> x < l) , ptShift (h-l,0)) , ( (\ (x,y) -> x > h) , ptShift (l-h,0)) ]
+wrapX l h = [ ( (\ ((x,y),_) -> x < l) , comp (vecToLoc (h-l,0))) , ( (\ ((x,y),_) -> x > h) , comp (vecToLoc (l-h,0))) ]
 
 wrapY::Float -> Float -> Space
-wrapY l h = [ ( (\ (x,y) -> y < l) , ptShift (0,h-l)) , ( (\ (x,y) -> y > h) , ptShift (0,l-h)) ]
+wrapY l h = [ ( (\ ((x,y),_) -> y < l) , comp (vecToLoc (0,h-l))) , ( (\ ((x,y),_) -> y > h) ,comp (vecToLoc (0,l-h))) ]
 
 t2::Float ->Float ->Space
 t2 w h = wrapX (-w) w ++ wrapY (-h) h
 
-spaceAdd::Space->Point->Point->Point
-spaceAdd s v1 v2 = spaceReduce s $ ptShift v1 v2
+spaceAdd::Space->Location->Location->Location
+spaceAdd s v1 v2 = spaceReduce s $ comp v1 v2
 
-spaceReduce::Space->Point->Point
+spaceReduce::Space->Location->Location
 spaceReduce s v = if spaceCheck s v then spaceReduce s $ appSpace s v else v
 
-appSpace::Space->Point->Point
+appSpace::Space->Location->Location
 appSpace [] p         = p
 appSpace ((b,r):xs) p = if b p then appSpace xs $ r p else appSpace xs p
 
-spaceCheck::Space->Point->Bool
+spaceCheck::Space->Location->Bool
 spaceCheck s p = or [ fst r p | r <- s]
 
-dups::Space->Object->[Object] -- takes a space and an object produces a list of posible render positons of that object
+dups::Space->(Object,Location)->[(Object,Location)] -- takes a space and an object produces a list of posible render positons of that object
 dups s o = rollingDups s [o]
 
-rollingDups::Space->[Object]->[Object]
-rollingDups [] o = o
-rollingDups ((b,r):ns) o = if colides then rollingDups ns $ concat $ map (\x -> [x,mapPts r x ]) o else rollingDups ns o
+rollingDups::Space->[(Object,Location)]->[(Object,Location)]
+rollingDups [] os = os
+rollingDups ((b,r):ns) os = if colides then rollingDups ns $ map (\ (o,l) -> (o, r l)) os else rollingDups ns os
   where
-    colides = or . (map b) . getPts . concat $ o :: Bool
+    colides = or . (map b) . (map vecToLoc) . getPts . concat $ map fst os :: Bool
 
-spaceDraw::Space->Object->Picture
-spaceDraw s o = Pictures . (map objectToPicture) $ dups s o
+spaceDraw::Space->Object-> Location -> Picture
+spaceDraw s o l = Pictures . (map objectToPicture) . map (uncurry (flip move)) $ dups s (o,l)

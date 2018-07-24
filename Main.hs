@@ -3,6 +3,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Debug.Trace
 import Object
+import SpaceRenderer
 
 type TestWorld = [[Int]]
 
@@ -24,7 +25,7 @@ stepWorld :: Float -> TestWorld -> TestWorld
 stepWorld _ t = t
 
 testRender :: TestWorld -> Picture
-testRender t = objectToPicture testob
+testRender t = renderGrid 10 500 500
 
 main :: IO ()
 main = play (InWindow "Nice Window" (500,500) (0, 0)) white 1 world testRender handleEvent stepWorld

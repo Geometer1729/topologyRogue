@@ -8,14 +8,14 @@ type Boundry = Point -> Bool
 
 type Rule = Point -> Point
 
-wrapX::Float -> Space
-wrapX w = [ ( (\ (x,y) -> x < 0) , ptShift (w,0)) , ( (\ (x,y) -> x > w) , ptShift (-w,0)) ]
+wrapX::Float -> Float -> Space
+wrapX l h = [ ( (\ (x,y) -> x < l) , ptShift (h-l,0)) , ( (\ (x,y) -> x > h) , ptShift (l-h,0)) ]
 
 wrapY::Float -> Space
-wrapY w =  [ ( (\ (x,y) -> y < 0) , ptShift (0,w)) , ( (\ (x,y) -> y > w) , ptShift (0,-w)) ]
+wrapX l h = [ ( (\ (x,y) -> y < l) , ptShift (0,h-l)) , ( (\ (x,y) -> y > h) , ptShift (0,l-h)) ]
 
 t2::Float ->Float ->Space
-t2 w h = wrapX w ++ wrapY h
+t2 w h = wrapX (-w) w ++ wrapY (-h) h
 
 spaceAdd::Space->Point->Point->Point
 spaceAdd s v1 v2 = spaceReduce s $ ptShift v1 v2

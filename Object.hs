@@ -47,3 +47,6 @@ ptShift (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
 comp::Location->Location->Location
 comp (v1,(m1,theta1)) (v2,(m2,theta2)) = (ptShift v1 v2,(  xor m1 m2 , theta1 + theta2 ))
+
+getPts::Object->[Point]
+getPts  o =  concat $ map fst o

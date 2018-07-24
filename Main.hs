@@ -28,4 +28,5 @@ testRender :: TestWorld -> Picture
 testRender t = renderGrid 10 500 500
 
 main :: IO ()
-main = play (InWindow "Nice Window" (500,500) (0, 0)) white 1 world testRender handleEvent stepWorld
+main = --play (InWindow "Nice Window" (500,500) (0, 0)) white 1 world testRender handleEvent stepWorld
+       display (InWindow "Nice Window" (500,500) (0, 0)) white (renderWorld testWorld)

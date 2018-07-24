@@ -14,8 +14,8 @@ wrapX w = [ ( (\ (x,y) -> x < 0) , ptShift (w,0)) , ( (\ (x,y) -> x > w) , ptShi
 wrapY::Float -> Space
 wrapY w =  [ ( (\ (x,y) -> y < 0) , ptShift (0,w)) , ( (\ (x,y) -> y > w) , ptShift (0,-w)) ]
 
-t2::Space
-t2 = wrapX 200 ++ wrapY 100
+t2::Float ->Float ->Space
+t2 w h = wrapX w ++ wrapY h
 
 spaceAdd::Space->Point->Point->Point
 spaceAdd s v1 v2 = spaceReduce s $ ptShift v1 v2

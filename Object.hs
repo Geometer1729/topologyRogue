@@ -5,6 +5,8 @@ module Object where
 import           Data.Bits
 import           Graphics.Gloss
 
+type LocalObj = (Object,Location)
+
 data Shape = Pol Polygon | Circ Circle
 
 type Circle = (Point,Float)
@@ -20,7 +22,7 @@ type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
 testob::Object
-testob =[(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue )]
+testob =[(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue ) , (Circ ((50,0),10) , cyan )]
 
 objectToPicture :: Object -> Picture
 objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ drawShape xs) o
@@ -34,6 +36,9 @@ render o = display (InWindow "Nice Window" (500,500) (0, 0)) white (objectToPict
 
 move:: Location -> Object -> Object
 move (pt,(mi,theta)) o = obShift pt $ spin theta $ maybeMirror mi o
+
+place::LocalObj->Object
+place = uncurry (flip move)
 
 --movePt::Location->Point->Point
 --movePt (pt,(mi,theta)) p = ptShift pt $ ptSpin theta $ (if mi then ptFlip else id) $ p

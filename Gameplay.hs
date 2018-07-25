@@ -14,14 +14,16 @@ data PelletWorld = PelletWorld {
                     pelletTaken :: Bool,
                     space :: Space,
                     player :: LocalObj,
-                    pellet :: IO LocalObj,
+                    pellet :: LocalObj,
                     score :: Int
                   }
 
-testPelletWorld = PelletWorld {pelletTaken=False,space=t2 250 250,player=testlocob,pellet=getPellet 0 500,score=0}
+testPelletWorld = do
+              p <- getPellet 500
+              return PelletWorld {pelletTaken=False,space=t2 250 250,player=testlocob,pellet=p,score=0}
 
-getPellet :: Float -> Float -> IO LocalObj
-getPellet f size = do
+getPellet :: Float -> IO LocalObj
+getPellet size = do
               g <- getStdGen
               let (x,g2) = random g :: (Float,StdGen)
               let (y,g3) = random g2 :: (Float,StdGen)
@@ -35,11 +37,12 @@ gameplay :: Float -> PelletWorld -> IO PelletWorld
 gameplay f w = do
               let s = space w
               let fixP = localReduce s (player w)
+              p <- getPellet 500
               return PelletWorld {
                  pelletTaken=False,
                  space=s,
                  player = fixP,
-                 pellet = if traceThis $ pelletTaken w then getPellet 0 500 else pellet w,
+                 pellet = if traceThis $ pelletTaken w then p else pellet w,
                  score = if pelletTaken w then score w + 1 else score w
                }
 
@@ -48,9 +51,15 @@ renderPelletWorld :: PelletWorld -> IO Picture
 renderPelletWorld w = do
                     let grid = renderGrid 10 500 500
                     let playerPic = spaceDraw (space w) (player w)
-                    p <- pellet w
-                    let pelletPic = spaceDraw (space w) p
-                    return $ Pictures [grid,playerPic,pelletPic]
+                    let pelletPic = spaceDraw (space w) (pellet w)
+                    return $ Pictures [grid,playerPic,pelletPic,renderScore w]
+
+renderScore :: PelletWorld -> Picture
+renderScore p = let s = score p
+                    pic = Text ("Score: " ++ (show s))
+                    scaled = Scale 0.2 0.2 pic
+                    translate = Translate (-75) 75 scaled
+                in translate
 
 --input
 handlePelletWorld :: Event -> PelletWorld -> IO PelletWorld
@@ -58,8 +67,7 @@ handlePelletWorld k w = do
                         let playerObj = fst (player w)
                         let playerLoc = snd (player w)
                         let newLoc = keyPressMove k playerLoc
-                        p <- pellet w
-                        let c = collides (space w) (player w) p
+                        let c = collides (space w) (player w) (pellet w)
                         return PelletWorld {
                           pelletTaken = traceThis c, --use collision detection here
                           space = space w,

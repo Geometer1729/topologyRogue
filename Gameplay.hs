@@ -20,7 +20,7 @@ data PelletWorld = PelletWorld {
 
 testPelletWorld = PelletWorld {pelletTaken=False,space=t2 250 250,player=testlocob,pellet=getPellet 0 500,score=0}
 
-getPellet :: Float -> Int -> IO LocalObj
+getPellet :: Float -> Float -> IO LocalObj
 getPellet f size = do
               g <- getStdGen
               let (x,g2) = random g :: (Float,StdGen)
@@ -38,7 +38,7 @@ gameplay f w = do
                  pelletTaken=False,
                  space=s,
                  player = fixP,
-                 pellet = if pelletTaken w then getPellet 0 500 else pellet w,
+                 pellet = if traceThis $ pelletTaken w then getPellet 0 500 else pellet w,
                  score = if pelletTaken w then score w + 1 else score w
                }
 
@@ -53,11 +53,14 @@ renderPelletWorld w = do
 
 --input
 handlePelletWorld :: Event -> PelletWorld -> IO PelletWorld
-handlePelletWorld k w = let playerObj = fst (player w)
-                            playerLoc = snd (player w)
-                            newLoc = keyPressMove k playerLoc
-                        in return PelletWorld {
-                          pelletTaken=False, --use collision detection here
+handlePelletWorld k w = do
+                        let playerObj = fst (player w)
+                        let playerLoc = snd (player w)
+                        let newLoc = keyPressMove k playerLoc
+                        p <- pellet w
+                        let c = collides (space w) (player w) p
+                        return PelletWorld {
+                          pelletTaken = traceThis c, --use collision detection here
                           space = space w,
                           player = (playerObj,newLoc),
                           pellet = pellet w,

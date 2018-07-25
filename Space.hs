@@ -8,6 +8,9 @@ traceThis x = trace (show x) x
 
 type LocalObj = (Object,Location)
 
+testlocob :: LocalObj
+testlocob = (testob,((0,0),(False,0::Float)))
+
 type Space = [(Boundary,Rule)]
 
 type Boundary = Location -> Bool

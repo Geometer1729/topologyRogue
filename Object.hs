@@ -25,7 +25,7 @@ move:: Location -> Object -> Object
 move (pt,(mi,theta)) o = obShift pt $ spin theta $ maybeMirror mi o
 
 --movePt::Location->Point->Point
---movePt (pt,(mi,theta)) p = ptShift pt $ ptSpin theta $ (if mi then ptFlip else id) $ p 
+--movePt (pt,(mi,theta)) p = ptShift pt $ ptSpin theta $ (if mi then ptFlip else id) $ p
 
 mapPts::(Point -> Point) -> Object -> Object
 mapPts f = map (\ (x,c) -> (map f x,c) )

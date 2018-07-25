@@ -75,3 +75,18 @@ partFlags (Circ (pt,r),_) = let fs = (map ptShift (cardinals r))
 
 cardinals::Float -> [Point] -- In the event of spaces with non Vertical/Horizontal boundries this will need to include more pts
 cardinals x = [(x,0),(-x,0),(0,x),(0,-x)]
+
+renderGrid :: Float -> Float -> Float -> Picture
+renderGrid n w h = let horizontal = [[(n*i,-w/2),(n*i,w/2)] | i <- [-w/(2*n)..w/(2*n)]] :: [[(Float,Float)]]
+                       vertical = [[(-h/2,n*i),(h/2,n*i)] | i <- [-h/(2*n)..h/(2*n)]] :: [[(Float,Float)]]
+                   in Pictures $ map Line (horizontal ++ vertical)
+
+--Locations for moving
+up :: Float -> Location
+up x = ((0,x),(False,0 :: Float))
+down :: Float -> Location
+down x = ((0,-x),(False,0 :: Float))
+left :: Float -> Location
+left x = ((-x,0),(False,0 :: Float))
+right :: Float -> Location
+right x = ((x,0),(False,0 :: Float))

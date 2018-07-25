@@ -54,8 +54,8 @@ rollingDups ((b,r):ns) os = if colides then rollingDups ns $ os ++ map (\ (o,l) 
   where
     colides =  or . (map (b . vecToLoc)) . getPts . concat $ map (uncurry .flip $ move) os :: Bool
 
-spaceDraw::Space->Object-> Location -> Picture
-spaceDraw s o l = Pictures . (map objectToPicture) . map (uncurry (flip move)) $ dups s (o,l)
+spaceDraw::Space-> LocalObj -> Picture
+spaceDraw s o = Pictures . (map objectToPicture) . map (uncurry (flip move)) $ dups s o
 
 localReduce::Space->LocalObj->LocalObj
 localReduce s = fmap (spaceReduce s)

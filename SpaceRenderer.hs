@@ -44,5 +44,5 @@ handleEventWorld (EventKey k downkey mods f@(x,y)) t@(s,os) = case k of
                                               _ -> t
 handleEventWorld _ t = t
 
-stepWorld :: Space -> Float -> World -> World
-stepWorld s _ =  fmap (map (localReduce s))
+stepWorld :: Float -> World -> World
+stepWorld _ (s,os) =  (s , (map (localReduce s)) os)

@@ -4,7 +4,14 @@ module Object where
 
 import           Data.Bits
 import           Graphics.Gloss
-type Object = [(Polygon,Color)]
+
+data Shape = Pol Polygon | Circ Circle
+
+type Circle = (Point,Float)
+
+type Part = (Shape,Color)
+
+type Object = [Part]
 
 type Polygon = [Point]
 
@@ -13,10 +20,14 @@ type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
 testob::Object
-testob =[([(-50,0),(0,50),(50,0)],black),([(-30,-5),(0,70),(30,-5)],red)]
+testob =[(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue )]
 
 objectToPicture :: Object -> Picture
-objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ Polygon xs) o
+objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ drawShape xs) o
+
+drawShape:: Shape -> Picture
+drawShape (Pol p) = Polygon p
+drawShape (Circ ((x,y),r)) = translate x y (circleSolid r)
 
 render::Object -> IO ()
 render o = display (InWindow "Nice Window" (500,500) (0, 0)) white (objectToPicture o)
@@ -25,10 +36,12 @@ move:: Location -> Object -> Object
 move (pt,(mi,theta)) o = obShift pt $ spin theta $ maybeMirror mi o
 
 --movePt::Location->Point->Point
---movePt (pt,(mi,theta)) p = ptShift pt $ ptSpin theta $ (if mi then ptFlip else id) $ p 
+--movePt (pt,(mi,theta)) p = ptShift pt $ ptSpin theta $ (if mi then ptFlip else id) $ p
 
 mapPts::(Point -> Point) -> Object -> Object
-mapPts f = map (\ (x,c) -> (map f x,c) )
+mapPts _ [] = []
+mapPts f (((Pol pts),c):o)  = (Pol (map f pts),c) : mapPts f o
+mapPts f ((Circ(pt,r),c):o) = (Circ (f pt,r),c) : mapPts f o
 
 maybeMirror::Bool -> Object -> Object
 maybeMirror mi = if mi then mapPts ptFlip else id
@@ -52,4 +65,13 @@ comp::Location->Location->Location
 comp (v1,(m1,theta1)) (v2,(m2,theta2)) = (ptShift v1 v2,(  xor m1 m2 , theta1 + theta2 ))
 
 getPts::Object->[Point]
-getPts  o =  concat $ map fst o
+getPts  o = concat $ map partFlags o
+
+partFlags::Part->[Point]
+partFlags (Pol pts,_) = pts
+partFlags (Circ (pt,r),_) = let fs = (map ptShift (cardinals r))
+                        in [f pt | f <- fs]
+
+
+cardinals::Float -> [Point] -- In the event of spaces with non Vertical/Horizontal boundries this will need to include more pts
+cardinals x = [(x,0),(-x,0),(0,x),(0,-x)]

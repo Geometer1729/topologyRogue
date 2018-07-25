@@ -29,8 +29,15 @@ wrapX l h = [ ( (\ ((x,y),_) -> x < l) , comp (vecToLoc (h-l,0))) , ( (\ ((x,y),
 wrapY::Float -> Float -> Space
 wrapY l h = [ ( (\ ((x,y),_) -> y < l) , comp (vecToLoc (0,h-l))) , ( (\ ((x,y),_) -> y > h) ,comp (vecToLoc (0,l-h))) ]
 
+flipX::Float->Float -> Space
+flipX l h = [ ( (\ ((x,y),_) -> x < l) , comp ((h-l,0),(True,pi)) ),( (\ ((x,y),_) -> x > h) , comp ((l-h,0),(True,pi)) ) ]
+
+
 t2::Float ->Float ->Space
 t2 w h = wrapX (-w) w ++ wrapY (-h) h
+
+k2::Float ->Float ->Space
+k2 w h = flipX (-w) w ++ wrapY (-h) h
 
 spaceAdd::Space->Location->Location->Location
 spaceAdd s v1 v2 = spaceReduce s $ comp v1 v2

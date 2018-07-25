@@ -20,7 +20,7 @@ type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
 testob::Object
-testob =[(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue )]
+testob =[(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue ) , (Circ ((50,0),10) , cyan )]
 
 objectToPicture :: Object -> Picture
 objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ drawShape xs) o

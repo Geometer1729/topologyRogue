@@ -123,10 +123,11 @@ triangleHas (Pol ((x1,y1):(x2,y2):(x3,y3):[])) (x,y) = and [s>0,t>0,t+s<1]
 triangleHas _ _ = error "triangleHas is only for triangles"
 
 circleHasLine::Shape->(Point,Point)->Bool
-circleHasLine (Circ (c,r)) (p1,p2) = d < r
+circleHasLine (Circ (c,r)) (p1,p2) = (d / l) < r
   where
     v1 = ptSub p1 c
     v2 = ptSub p1 p2
+    l = l2 p1 p2
     d = ptDot v1 v2
 
 circleHasLine _ _ = error "circleHasLine expects a circle"

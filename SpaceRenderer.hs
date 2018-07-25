@@ -29,7 +29,7 @@ type World = (Space,[LocalObj])
 renderWorld :: World -> Picture
 renderWorld w@(s,o) = let grid = renderGrid 10 500 500
                           pieces = [spaceDraw s (fst p) (snd p) | p <- o]
-                      in Pictures (pieces ++ [grid])
+                      in Pictures ([grid] ++ pieces)
 
 testWorld = ((t2 250 250),[(testob,((0::Float,0::Float),(False,0::Float)))])
 
@@ -44,5 +44,5 @@ handleEventWorld (EventKey k downkey mods f@(x,y)) t@(s,os) = case k of
                                               _ -> t
 handleEventWorld _ t = t
 
-stepWorld :: Space -> Float -> World -> World
-stepWorld s _ =  fmap (map (localReduce s))
+stepWorld :: Float -> World -> World
+stepWorld _ (s,os) =  (s , (map (localReduce s)) os)

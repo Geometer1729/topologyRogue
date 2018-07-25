@@ -25,7 +25,7 @@ getPellet f size = do
               g <- getStdGen
               let (x,g2) = random g :: (Float,StdGen)
               let (y,g3) = random g2 :: (Float,StdGen)
-              let loc = ((x,y),(False,0::Float))
+              let loc = ((size*(x-0.5),size*(y-0.5)),(False,0::Float))
               return (pelletTemplate,loc)
 
 

@@ -1,13 +1,13 @@
 module SpaceRenderer where
-import Graphics.Gloss.Interface.Pure.Game
-import Graphics.Gloss
-import Object
-import Space
-import Debug.Trace
+import           Debug.Trace
+import           Graphics.Gloss
+import           Graphics.Gloss.Interface.Pure.Game
+import           Object
+import           Space
 
 isDown :: KeyState -> Bool
 isDown Down = True
-isDown _ = False
+isDown _    = False
 
 --Locations for moving
 up :: Float -> Location
@@ -24,11 +24,11 @@ renderGrid n w h = let horizontal = [[(n*i,-w/2),(n*i,w/2)] | i <- [-w/(2*n)..w/
                        vertical = [[(-h/2,n*i),(h/2,n*i)] | i <- [-h/(2*n)..h/(2*n)]] :: [[(Float,Float)]]
                    in Pictures $ map Line (horizontal ++ vertical)
 
-type World = (Space,[(Object,Location)])
+type World = (Space,[LocalObj])
 
 renderWorld :: World -> Picture
 renderWorld w@(s,o) = let grid = renderGrid 10 500 500
-                          pieces = [spaceDraw s (move (snd p) (fst p)) | p <- o]
+                          pieces = [spaceDraw s (fst p) (snd p) | p <- o]
                       in Pictures (pieces ++ [grid])
 
 testWorld = ((t2 250 250),[(testob,((0::Float,0::Float),(False,0::Float)))])
@@ -41,7 +41,8 @@ handleEventWorld (EventKey k downkey mods f@(x,y)) t@(s,os) = case k of
                                               (SpecialKey KeyDown) -> (s,[(fst o,comp (down 10) (snd o)) | o <- os])
                                               (SpecialKey KeyLeft) -> (s,[(fst o,comp (left 10) (snd o)) | o <- os])
                                               (SpecialKey KeyRight) -> (s,[(fst o,comp (right 10) (snd o)) | o <- os])
+                                              _ -> t
 handleEventWorld _ t = t
 
-stepWorld :: Float -> World -> World
-stepWorld _ = id
+stepWorld :: Space -> Float -> World -> World
+stepWorld s _ =  fmap (map (localReduce s))

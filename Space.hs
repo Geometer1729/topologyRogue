@@ -1,10 +1,16 @@
 module Space where
+import           Debug.Trace
 import           Graphics.Gloss
 import           Object
 
-type Space = [(Boundry,Rule)]
+traceThis:: (Show a) => a -> a
+traceThis x = trace (show x) x
 
-type Boundry = Location -> Bool
+type LocalObj = (Object,Location)
+
+type Space = [(Boundary,Rule)]
+
+type Boundary = Location -> Bool
 
 type Rule = Location -> Location
 
@@ -36,14 +42,17 @@ appSpace ((b,r):xs) p = if b p then appSpace xs $ r p else appSpace xs p
 spaceCheck::Space->Location->Bool
 spaceCheck s p = or [ fst r p | r <- s]
 
-dups::Space->(Object,Location)->[(Object,Location)] -- takes a space and an object produces a list of posible render positons of that object
+dups::Space->LocalObj->[LocalObj] -- takes a space and an object produces a list of posible render positons of that object
 dups s o = rollingDups s [o]
 
-rollingDups::Space->[(Object,Location)]->[(Object,Location)]
+rollingDups::Space->[LocalObj]->[LocalObj]
 rollingDups [] os = os
-rollingDups ((b,r):ns) os = if colides then rollingDups ns $ map (\ (o,l) -> (o, r l)) os else rollingDups ns os
+rollingDups ((b,r):ns) os = if colides then rollingDups ns $ os ++ map (\ (o,l) -> (o, r l)) os else rollingDups ns os
   where
-    colides = or . (map b) . (map vecToLoc) . getPts . concat $ map fst os :: Bool
+    colides =  or . (map (b . vecToLoc)) . getPts . concat $ map (uncurry .flip $ move) os :: Bool
 
 spaceDraw::Space->Object-> Location -> Picture
 spaceDraw s o l = Pictures . (map objectToPicture) . map (uncurry (flip move)) $ dups s (o,l)
+
+localReduce::Space->LocalObj->LocalObj
+localReduce s = fmap (spaceReduce s)

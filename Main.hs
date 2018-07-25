@@ -1,12 +1,12 @@
 
-import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
-import Debug.Trace
-import Object
-import SpaceRenderer
-
+import           Debug.Trace
+import           Graphics.Gloss
+import           Graphics.Gloss.Interface.Pure.Game
+import           Object
+import           Space
+import           SpaceRenderer
 
 
 main :: IO ()
-main = play (InWindow "Nice Window" (500,500) (0, 0)) white 1 testWorld renderWorld handleEventWorld stepWorld
+main = play (InWindow "Nice Window" (500,500) (0, 0)) white 1 testWorld renderWorld handleEventWorld (stepWorld (t2 250 250))
        --display (InWindow "Nice Window" (500,500) (0, 0)) white (renderWorld testWorld)

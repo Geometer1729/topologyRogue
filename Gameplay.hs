@@ -25,6 +25,7 @@ getPellet f size = do
               g <- getStdGen
               let (x,g2) = random g :: (Float,StdGen)
               let (y,g3) = random g2 :: (Float,StdGen)
+              setStdGen g3
               let loc = ((size*(x-0.5),size*(y-0.5)),(False,0::Float))
               return (pelletTemplate,loc)
 
@@ -49,7 +50,7 @@ renderPelletWorld w = do
                     let playerPic = spaceDraw (space w) (player w)
                     p <- pellet w
                     let pelletPic = spaceDraw (space w) p
-                    return $ Pictures [playerPic,pelletPic,grid]
+                    return $ Pictures [grid,playerPic,pelletPic]
 
 --input
 handlePelletWorld :: Event -> PelletWorld -> IO PelletWorld

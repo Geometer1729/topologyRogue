@@ -3,10 +3,9 @@ import           Debug.Trace
 import           Graphics.Gloss
 import           Object
 import           Prelude        hiding (lines)
+
 traceThis:: (Show a) => a -> a
 traceThis x = trace (show x) x
-
-
 
 testlocob :: LocalObj
 testlocob = (testob,((0,0),(False,0::Float)))
@@ -92,7 +91,8 @@ isCirc _        = error "What the fuck?"
 
 shapeColision::Shape->Shape->Bool
 shapeColision (Circ (pt1,r1)) (Circ (pt2,r2)) = l2 pt1 pt2 < r1 + r2
-shapeColision s p@(Pol pts) = or [contains s pt | pt <- pts ] || if isCirc s then or [circleHasLine s l | l <- lines p]  else False
+shapeColision p1@(Pol pts1) p2@(Pol pts2) = (or [contains p1 pt | pt <- pts2 ]) || (or [contains p2 pt | pt <- pts1 ])
+shapeColision s@(Circ (c,r)) p@(Pol pts) = or $ [contains p c]++[traceShowId $ circleHasLine s l | l <- lines p]
 shapeColision a b = shapeColision b a
 
 l2::Point->Point->Float
@@ -107,7 +107,7 @@ lineHelper (x1:[]) f    = [(x1,f)]
 
 contains::Shape->Point->Bool
 contains (Circ (c,r)) p = l2 c p < r
-contains q@(Pol _) p = even $ length $ filter id [triangleHas tri p | tri <- (triangulate q)]
+contains q@(Pol _) p = odd $ length $ filter id [triangleHas tri p | tri <- (triangulate q)]
 
 triangulate::Shape->[Shape]
 triangulate (Circ _) = error "You can only triangulate polygons"
@@ -123,12 +123,15 @@ triangleHas (Pol ((x1,y1):(x2,y2):(x3,y3):[])) (x,y) = and [s>0,t>0,t+s<1]
 triangleHas _ _ = error "triangleHas is only for triangles"
 
 circleHasLine::Shape->(Point,Point)->Bool
-circleHasLine (Circ (c,r)) (p1,p2) = d < r
+circleHasLine (Circ (c,r)) (p1,p2) = ((min d1 d2) < r) || and [traceShow (h,r) (h < r),b>0,b<d1]
   where
-    v1 = ptSub p1 c
-    v2 = ptSub p1 p2
-    d = ptDot v1 v2
-
+    v1 = ptSub p2 p1 :: Point
+    d1 = (l2 (0,0) v1) :: Float
+    v2 = ptSub c p1 ::Point
+    d2 = (l2 (0,0) v2) ::Float
+    d = ptDot v1 v2 ::Float
+    b = d/ d1 :: Float
+    h = sqrt $ d2^2 - b^2 ::Float
 circleHasLine _ _ = error "circleHasLine expects a circle"
 
 ptSub::Point->Point->Point

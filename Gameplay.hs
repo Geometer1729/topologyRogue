@@ -1,21 +1,20 @@
 module Gameplay where
-import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
-import System.Random
-import Object
-import Space
+import           Graphics.Gloss
+import           Graphics.Gloss.Interface.Pure.Game
+import           Object
+import           Space
+import           System.Random
 
 
 pelletTemplate :: Object
-pelletTemplate = [(Pol [(0,0),(10,0),(10,10),(0,10)],red),
-                  (Pol [(5,0),(10,5),(5,10),(0,5)],black)]
+pelletTemplate = [(Circ ((0,0),10),red)]
 
 data PelletWorld = PelletWorld {
                     pelletTaken :: Bool,
-                    space :: Space,
-                    player :: LocalObj,
-                    pellet :: LocalObj,
-                    score :: Int
+                    space       :: Space,
+                    player      :: LocalObj,
+                    pellet      :: LocalObj,
+                    score       :: Int
                   }
 
 testPelletWorld = do
@@ -42,7 +41,7 @@ gameplay f w = do
                  pelletTaken=False,
                  space=s,
                  player = fixP,
-                 pellet = if traceThis $ pelletTaken w then p else pellet w,
+                 pellet = if pelletTaken w then p else pellet w,
                  score = if pelletTaken w then score w + 1 else score w
                }
 
@@ -67,9 +66,9 @@ handlePelletWorld k w = do
                         let playerObj = fst (player w)
                         let playerLoc = snd (player w)
                         let newLoc = keyPressMove k playerLoc
-                        let c = collides (space w) (player w) (pellet w)
+                        let c = traceThis $ collides (space w) (player w) (pellet w)
                         return PelletWorld {
-                          pelletTaken = traceThis c, --use collision detection here
+                          pelletTaken = c, --use collision detection here
                           space = space w,
                           player = (playerObj,newLoc),
                           pellet = pellet w,

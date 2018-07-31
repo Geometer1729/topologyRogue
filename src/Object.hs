@@ -89,6 +89,12 @@ renderGrid n w h = let horizontal = [[(n*i,-w/2),(n*i,w/2)] | i <- [-w/(2*n)..w/
                        vertical = [[(-h/2,n*i),(h/2,n*i)] | i <- [-h/(2*n)..h/(2*n)]] :: [[(Float,Float)]]
                    in Pictures $ map Line (horizontal ++ vertical)
 
+instance Num Point where
+  (x1,y1) + (x2,y2) = (x1+x2,y1+y2)
+  (x1,y1) - (x2,y2) = (x1-x2,y1-y2)
+
+
+
 --Locations for moving
 up :: Float -> Location
 up x = ((0,x),(False,0 :: Float))

@@ -21,7 +21,7 @@ data PelletWorld = PelletWorld {
 
 testPelletWorld = do
               p <- getPellet 500
-              return PelletWorld {space=t2 250 250,player=testMovOb,pellet=p,score=0,keys = allOff}
+              return PelletWorld {space=kh 250 250,player=testMovOb,pellet=p,score=0,keys = allOff}
 
 getPellet :: Float -> IO MovingObj
 getPellet size = do
@@ -71,7 +71,7 @@ handlePelletWorld k w = do
                         let (pObj,pLoc,_) = (player w)
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
-                        let newMot = arrowToMot newKeys
+                        let newMot = keyToPol newKeys
                         return PelletWorld {
                           space = space w,
                           player = (pObj,pLoc,newMot),
@@ -104,10 +104,36 @@ kright :: Bool
 allOff::ArrowState
 allOff = ArrowState False False False False
 
-arrowToMot:: ArrowState -> Motion
-arrowToMot (ArrowState u d l r) = um.dm.lm.rm
+keyToCart:: ArrowState -> Motion
+keyToCart (ArrowState u d l r) = um.dm.lm.rm
   where
     um = if u then mup 10 else id
     dm = if d then mdown 10 else id
     lm = if l then mleft 10 else id
     rm = if r then mright 10 else id
+
+keyToPol:: ArrowState -> Motion
+keyToPol (ArrowState u d l r) = um.dm.lm.rm
+  where
+    um = if u then forward 10 else id
+    dm = if d then backward 10 else id
+    lm = if l then ccw 0.1 else id
+    rm = if r then cw 0.1 else id
+
+ccw::Float -> Motion
+ccw dtheta (pt,(f,theta)) = (pt,(f,theta+(maybeNeg f dtheta)))
+
+cw::Float -> Motion
+cw x = ccw (-1*x)
+
+forward::Float -> Motion
+forward x l@(pt,(f,theta)) = comp (vecToLoc (cos thetar * x,sin thetar * x)) l
+  where
+    thetar = theta + pi /2
+
+backward::Float -> Motion
+backward x = forward (-1*x)
+
+maybeNeg::Bool->Float->Float
+maybeNeg False = id
+maybeNeg True = (*) (-1)

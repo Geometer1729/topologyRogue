@@ -5,6 +5,9 @@ import           Object
 testlocob :: LocalObj
 testlocob = (testob,((0,0),(False,0::Float)))
 
+localBullet:: LocalObj
+localBullet = (bulletOb,((0,0),(False,0::Float)))
+
 type Space = [(Boundary,Rule)]
 
 type Boundary = Location -> Bool

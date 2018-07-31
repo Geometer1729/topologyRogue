@@ -54,7 +54,7 @@ triangleHas (Pol ((x1,y1):(x2,y2):(x3,y3):[])) (x,y) = and [s>0,t>0,t+s<1]
 triangleHas _ _ = error "triangleHas is only for triangles"
 
 circleHasLine::Shape->(Point,Point)->Bool
-circleHasLine (Circ (c,r)) (p1,p2) = ((min d1 d2) < r) || and [ (h-3 < r),b>0,b<d1]
+circleHasLine (Circ (c,r)) (p1,p2) = ((min d2 (l2 c p2)) < r) || and [ (h-3 < r),b>0,b<d1]
   where
     v1 = ptSub p2 p1 :: Point
     d1 = (l2 (0,0) v1) :: Float

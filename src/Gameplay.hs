@@ -7,6 +7,7 @@ import Space
 import System.Random
 import Collision
 import Motion
+import Debug.Trace
 
 
 isDown :: KeyState -> Bool
@@ -58,7 +59,7 @@ gameplay x y f w@(PelletWorld _ _ _ _ _ _) = do
                  player = tickedP,
                  pellet = if pelletTaken then p else pellet w,
                  score = if pelletTaken then score w + 1 else score w,
-                 bullets = filter (\ (_,l) -> l>=0) [(tick s ob,l-1) | (ob,l) <- (bullets w)],
+                 bullets = [(tick s ob,l-1) | (ob,l) <- (bullets w) , l>0 , not $ collides s (getLoc (tickedP)) (getLoc (tick s ob))],
                  keys = keys w
                }
 gameplay _ _ f w@(Pause _ _ _) = return w
@@ -107,7 +108,7 @@ handlePelletWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(PelletWorld _ _ _
   return PelletWorld {
     space = space w,
     player = player w,
-    bullets = bullets w ++ [((bulletOb,loc,forward 20),90)],
+    bullets = bullets w ++ [( (bulletOb,forward 60 loc,forward 20),90)],
     pellet = pellet w,
     score = score w,
     keys = keys w

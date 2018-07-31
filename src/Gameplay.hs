@@ -7,17 +7,25 @@ import Space
 import System.Random
 import Collision
 import Motion
-import SpaceRenderer
+
+
+isDown :: KeyState -> Bool
+isDown Down = True
+isDown _    = False
 
 pelletTemplate :: Object
 pelletTemplate = [(Circ ((0,0),10),red)]
 
-data PelletWorld = PelletWorld {
+data World = PelletWorld {
                     space       :: Space,
                     player      :: MovingObj,
                     pellet      :: MovingObj,
                     score       :: Int,
                     keys :: ArrowState
+                  } | Pause {
+                    selection :: Int,
+                    buttons:: [(String,World)],
+                    backGround :: World -- world to be rendered as backGround
                   }
 
 testPelletWorld = do
@@ -35,8 +43,8 @@ getPellet size = do
 
 
 --stepWorld
-gameplay :: Float -> PelletWorld -> IO PelletWorld
-gameplay f w = do
+gameplay :: Float -> World -> IO World
+gameplay f w@(PelletWorld _ _ _ _ _) = do
               let s = space w
               let spaceTick = tick s
               let tickedP = spaceTick (player w)
@@ -50,16 +58,35 @@ gameplay f w = do
                  score = if pelletTaken then score w + 1 else score w,
                  keys = oldKeys
                }
+gameplay f w@(Pause _ _ _) = return w
+
 
 --render
-renderPelletWorld :: PelletWorld -> IO Picture
-renderPelletWorld w = do
+renderPelletWorld :: World -> IO Picture
+renderPelletWorld w@(PelletWorld _ _ _ _ _) = do
                     let grid = renderGrid 10 500 500
                     let playerPic = spaceDraw (space w) (getLoc (player w))
                     let pelletPic = spaceDraw (space w) (getLoc (pellet w))
                     return $ Pictures [grid,playerPic,pelletPic,renderScore w]
+renderPelletWorld (Pause s os bg) = do
+                    bgp <- renderPelletWorld bg
+                    let oc = length os
+                    let ops = [ (i == s,fromIntegral (25*oc-50*i) :: Float ,fst (os!!i)) | i <- [0..(oc -1)] ]
+                    let menuPic = Pictures $ map renderMenuOption ops
+                    return menuPic-- temporary code
 
-renderScore :: PelletWorld -> Picture
+
+renderMenuOption::(Bool,Float,String)->Picture
+renderMenuOption (selected,height,text) = Pictures [box,translate] where
+    col = if selected then red else black ::Color
+    pic = color col $ Text text :: Picture
+    scaled = Scale 0.2 0.2 pic :: Picture
+    translate = Translate (-75) height scaled:: Picture
+    box = color col $ line [(-75,height-10),(75,height-10),(75,height+30),(-75,height+30),(-75,height-10)] :: Picture
+
+
+
+renderScore :: World -> Picture
 renderScore p = let s = score p
                     pic = Text ("Score: " ++ (show s))
                     scaled = Scale 0.2 0.2 pic
@@ -67,8 +94,12 @@ renderScore p = let s = score p
                 in translate
 
 --input
-handlePelletWorld :: Event -> PelletWorld -> IO PelletWorld
-handlePelletWorld k w = do
+handlePelletWorld :: Event -> World -> IO World
+handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Pause x os bg) = return $ Pause (mod (x-1) (length os)) os bg
+handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Pause x os bg) = return $ Pause (mod (x+1) (length os)) os bg
+handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Pause x os bg) = return $ snd (os !! x)
+handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = return (Pause 0 [("Resume",w),("Save",w),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
+handlePelletWorld k w@(PelletWorld _ _ _ _ _) = do
                         let (pObj,pLoc,_) = (player w)
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
@@ -80,6 +111,9 @@ handlePelletWorld k w = do
                           score = score w,
                           keys = newKeys
                         }
+handlePelletWorld x w = do
+  --print x
+  return w -- do nothing if key stroke not delt with
 
 
 

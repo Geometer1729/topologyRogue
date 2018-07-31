@@ -5,7 +5,6 @@ import Graphics.Gloss
 import Space
 import Object
 import           Prelude        hiding (lines)
-import Debug.Trace
 
 collides::Space->LocalObj->LocalObj->Bool --assumes space reduced objects
 collides s r1 r2 = or [simpleCollides (place x) (place y) | x <- (dups s r1) , y <- (dups s r2) ]
@@ -24,7 +23,7 @@ isCirc _        = error "What the fuck?"
 shapeColision::Shape->Shape->Bool
 shapeColision (Circ (pt1,r1)) (Circ (pt2,r2)) =  (l2 pt1 pt2) < (r1 + r2) -3
 shapeColision p1@(Pol pts1) p2@(Pol pts2) = (or [contains p1 pt | pt <- pts2 ]) || (or [contains p2 pt | pt <- pts1 ])
-shapeColision s@(Circ (c,r)) p@(Pol pts) = or $ [contains p c]++[traceShowId $ circleHasLine s l | l <- lines p]
+shapeColision s@(Circ (c,r)) p@(Pol pts) = or $ [contains p c]++[circleHasLine s l | l <- lines p]
 shapeColision a b = shapeColision b a
 
 l2::Point->Point->Float
@@ -55,7 +54,7 @@ triangleHas (Pol ((x1,y1):(x2,y2):(x3,y3):[])) (x,y) = and [s>0,t>0,t+s<1]
 triangleHas _ _ = error "triangleHas is only for triangles"
 
 circleHasLine::Shape->(Point,Point)->Bool
-circleHasLine (Circ (c,r)) (p1,p2) = ((min d1 d2) < r) || and [ (h-3 < r),b>0,b<d1]
+circleHasLine (Circ (c,r)) (p1,p2) = ((min d2 (l2 c p2)) < r) || and [ (h-3 < r),b>0,b<d1]
   where
     v1 = ptSub p2 p1 :: Point
     d1 = (l2 (0,0) v1) :: Float

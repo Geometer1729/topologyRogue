@@ -5,6 +5,9 @@ import           Object
 testlocob :: LocalObj
 testlocob = (testob,((0,0),(False,0::Float)))
 
+localBullet:: LocalObj
+localBullet = (bulletOb,((0,0),(False,0::Float)))
+
 type Space = [(Boundary,Rule)]
 
 type Boundary = Location -> Bool
@@ -24,12 +27,12 @@ wrapY::Float -> Float -> Space
 wrapY l h = [ ( (\ ((x,y),_) -> y < l) , comp (vecToLoc (0,h-l))) , ( (\ ((x,y),_) -> y > h) ,comp (vecToLoc (0,l-h))) ]
 
 flipX::Float->Float -> Space
-flipX l h = [ ( (\ ((x,y),_) -> x < l) , (\ ((x,y),(f,t)) -> (((x+h-l,h+l-y),(not f,t+pi)  )  ) ) )
-            , ( (\ ((x,y),_) -> x > h) , (\ ((x,y),(f,t)) -> (((x+h-l,h+l-y),(not f,t+pi)  )  ) ) )]
+flipX l h = [ ( (\ ((x,y),_) -> x < l) , (\ ((x,y),(f,t)) -> (((x+h-l,h+l-y),(not f,pi-t)  )  ) ) )
+            , ( (\ ((x,y),_) -> x > h) , (\ ((x,y),(f,t)) -> (((x+l-h,h+l-y),(not f,pi-t)  )  ) ) )]
 
 flipY::Float->Float -> Space
-flipY l h = [ ( (\ ((x,y),_) -> y < l) , (\ ((x,y),(f,t)) -> (((h+l-y,x+h-l),(not f,t+pi)  )  ) ) )
-            , ( (\ ((x,y),_) -> y > h) , (\ ((x,y),(f,t)) -> (((h+l-y,x+h-l),(not f,t+pi)  )  ) ) )]
+flipY l h = [ ( (\ ((x,y),_) -> y < l) , (\ ((x,y),(f,t)) -> (((h+l-x,y+h-l),(not f,t)  )  ) ) )
+            , ( (\ ((x,y),_) -> y > h) , (\ ((x,y),(f,t)) -> (((h+l-x,y+l-h),(not f,t)  )  ) ) )]
 
 t2::Float ->Float ->Space
 t2 w h = wrapX (-w) w ++ wrapY (-h) h

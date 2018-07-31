@@ -28,8 +28,8 @@ flipX l h = [ ( (\ ((x,y),_) -> x < l) , (\ ((x,y),(f,t)) -> (((x+h-l,h+l-y),(no
             , ( (\ ((x,y),_) -> x > h) , (\ ((x,y),(f,t)) -> (((x+l-h,h+l-y),(not f,pi-t)  )  ) ) )]
 
 flipY::Float->Float -> Space
-flipY l h = [ ( (\ ((x,y),_) -> y < l) , (\ ((x,y),(f,t)) -> (((h+l-y,x+h-l),(not f,t)  )  ) ) )
-            , ( (\ ((x,y),_) -> y > h) , (\ ((x,y),(f,t)) -> (((h+l-y,x+l-h),(not f,t)  )  ) ) )]
+flipY l h = [ ( (\ ((x,y),_) -> y < l) , (\ ((x,y),(f,t)) -> (((h+l-x,y+h-l),(not f,t)  )  ) ) )
+            , ( (\ ((x,y),_) -> y > h) , (\ ((x,y),(f,t)) -> (((h+l-x,y+l-h),(not f,t)  )  ) ) )]
 
 t2::Float ->Float ->Space
 t2 w h = wrapX (-w) w ++ wrapY (-h) h

@@ -1,9 +1,10 @@
 module Gameplay where
-import           Graphics.Gloss
-import           Graphics.Gloss.Interface.Pure.Game
-import           Object
-import           Space
-import           System.Random
+
+import Graphics.Gloss
+import Graphics.Gloss.Interface.Pure.Game
+import Object
+import Space
+import System.Random
 import Collision
 import Motion
 import SpaceRenderer

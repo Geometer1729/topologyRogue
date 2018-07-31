@@ -23,7 +23,8 @@ data World = PelletWorld {
                     bullets     :: [(MovingObj,Int)],
                     pellet      :: MovingObj,
                     score       :: Int,
-                    keys :: ArrowState
+                    keys :: ArrowState,
+                    time :: Float
                   } | Pause {
                     selection :: Int,
                     buttons:: [(String,World)],
@@ -33,7 +34,7 @@ data World = PelletWorld {
 testPelletWorld :: Float -> Float -> IO World
 testPelletWorld x y = do
               p <- getPellet x y
-              return PelletWorld {space=kh (x/2) (y/2),player=testMovOb,pellet=p,bullets=[],score=0,keys = allOff}
+              return PelletWorld {space=kh (x/2) (y/2),player=testMovOb,pellet=p,bullets=[],score=0,keys = allOff, time=0}
 
 getPellet :: Float -> Float -> IO MovingObj
 getPellet sx sy = do
@@ -47,7 +48,7 @@ getPellet sx sy = do
 
 --stepWorld
 gameplay :: Float -> Float -> Float -> World -> IO World
-gameplay x y f w@(PelletWorld _ _ _ _ _ _) = do
+gameplay x y f w@(PelletWorld _ _ _ _ _ _ _) = do
               let s = space w
               let spaceTick = tick s
               let tickedP = spaceTick (player w)
@@ -60,18 +61,19 @@ gameplay x y f w@(PelletWorld _ _ _ _ _ _) = do
                  pellet = if pelletTaken then p else pellet w,
                  score = if pelletTaken then score w + 1 else score w,
                  bullets = [(tick s ob,l-1) | (ob,l) <- (bullets w) , l>0 , not $ collides s (getLoc (tickedP)) (getLoc (tick s ob))],
-                 keys = keys w
+                 keys = keys w,
+                 time = f + time w
                }
 gameplay _ _ f w@(Pause _ _ _) = return w
 
 
 --render
 renderPelletWorld :: World -> IO Picture
-renderPelletWorld w@(PelletWorld _ _ _ _ _ _) = do
+renderPelletWorld w@(PelletWorld _ _ _ _ _ _ _) = do
                     let playerPic = spaceDraw (space w) (getLoc (player w))
                     let pelletPic = spaceDraw (space w) (getLoc (pellet w))
                     let bulletPic = Pictures $ map ((spaceDraw (space w)).getLoc.fst) (bullets w)
-                    return $ Pictures [playerPic,bulletPic,pelletPic,renderScore w]
+                    return $ Pictures [playerPic,bulletPic,pelletPic,renderScore w, renderTimer w]
 renderPelletWorld (Pause s os bg) = do
                     bgp <- renderPelletWorld bg
                     let oc = length os
@@ -89,12 +91,18 @@ renderMenuOption (selected,height,text) = Pictures [box,translate] where
     box = color col $ line [(-75,height-10),(75,height-10),(75,height+30),(-75,height+30),(-75,height-10)] :: Picture
 
 
-
 renderScore :: World -> Picture
 renderScore p = let s = score p
                     pic = Text ("Score: " ++ (show s))
                     scaled = Scale 0.2 0.2 pic
                     translate = Translate (-75) 75 scaled
+                in translate
+--if I do this one more time, I'm making a renderText function
+renderTimer :: World -> Picture
+renderTimer w = let t = time w
+                    pic = Text ("Time: " ++ (show t))
+                    scaled = Scale 0.2 0.2 pic
+                    translate = Translate (-75) 125 scaled
                 in translate
 
 --input
@@ -103,7 +111,7 @@ handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Pause x os bg) = retur
 handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Pause x os bg) = return $ Pause (mod (x+1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Pause x os bg) = return $ snd (os !! x)
 handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = return (Pause 0 [("Resume",w),("Save",w),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
-handlePelletWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(PelletWorld _ _ _ _ _ _) = do
+handlePelletWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(PelletWorld _ _ _ _ _ _ _) = do
   let (_,loc,_) = player w
   return PelletWorld {
     space = space w,
@@ -111,9 +119,10 @@ handlePelletWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(PelletWorld _ _ _
     bullets = bullets w ++ [( (bulletOb,forward 60 loc,forward 20),90)],
     pellet = pellet w,
     score = score w,
-    keys = keys w
+    keys = keys w,
+    time = time w
   }
-handlePelletWorld k w@(PelletWorld _ _ _ _ _ _) = do
+handlePelletWorld k w@(PelletWorld _ _ _ _ _ _ _) = do
                         let (pObj,pLoc,_) = (player w)
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
@@ -124,7 +133,8 @@ handlePelletWorld k w@(PelletWorld _ _ _ _ _ _) = do
                           bullets = bullets w,
                           pellet = pellet w,
                           score = score w,
-                          keys = newKeys
+                          keys = newKeys,
+                          time = time w
                         }
 handlePelletWorld x w = do
   --print x

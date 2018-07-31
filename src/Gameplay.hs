@@ -19,6 +19,7 @@ pelletTemplate = [(Circ ((0,0),10),red)]
 data World = PelletWorld {
                     space       :: Space,
                     player      :: MovingObj,
+                    bullets     :: [(MovingObj,Int)],
                     pellet      :: MovingObj,
                     score       :: Int,
                     keys :: ArrowState
@@ -31,7 +32,7 @@ data World = PelletWorld {
 testPelletWorld :: Float -> Float -> IO World
 testPelletWorld x y = do
               p <- getPellet x y
-              return PelletWorld {space=kh (x/2) (y/2),player=testMovOb,pellet=p,score=0,keys = allOff}
+              return PelletWorld {space=kh (x/2) (y/2),player=testMovOb,pellet=p,bullets=[],score=0,keys = allOff}
 
 getPellet :: Float -> Float -> IO MovingObj
 getPellet sx sy = do
@@ -45,29 +46,31 @@ getPellet sx sy = do
 
 --stepWorld
 gameplay :: Float -> Float -> Float -> World -> IO World
-gameplay x y f w@(PelletWorld _ _ _ _ _) = do
+gameplay x y f w@(PelletWorld _ _ _ _ _ _) = do
               let s = space w
               let spaceTick = tick s
               let tickedP = spaceTick (player w)
               p <- getPellet x y
-              let pelletTaken = collides s (getLoc tickedP) (getLoc (pellet w))
+              let pelletTaken = or [ (collides s (getLoc (pellet w))) o | o <- (getLoc tickedP):(map (getLoc.fst) (bullets w)) ]
               let oldKeys = keys w
               return PelletWorld {
                  space=s,
                  player = tickedP,
                  pellet = if pelletTaken then p else pellet w,
                  score = if pelletTaken then score w + 1 else score w,
-                 keys = oldKeys
+                 bullets = filter (\ (_,l) -> l>=0) [(tick s ob,l-1) | (ob,l) <- (bullets w)],
+                 keys = keys w
                }
 gameplay _ _ f w@(Pause _ _ _) = return w
 
 
 --render
 renderPelletWorld :: World -> IO Picture
-renderPelletWorld w@(PelletWorld _ _ _ _ _) = do
+renderPelletWorld w@(PelletWorld _ _ _ _ _ _) = do
                     let playerPic = spaceDraw (space w) (getLoc (player w))
                     let pelletPic = spaceDraw (space w) (getLoc (pellet w))
-                    return $ Pictures [playerPic,pelletPic,renderScore w]
+                    let bulletPic = Pictures $ map ((spaceDraw (space w)).getLoc.fst) (bullets w)
+                    return $ Pictures [playerPic,bulletPic,pelletPic,renderScore w]
 renderPelletWorld (Pause s os bg) = do
                     bgp <- renderPelletWorld bg
                     let oc = length os
@@ -99,7 +102,17 @@ handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Pause x os bg) = retur
 handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Pause x os bg) = return $ Pause (mod (x+1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Pause x os bg) = return $ snd (os !! x)
 handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = return (Pause 0 [("Resume",w),("Save",w),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
-handlePelletWorld k w@(PelletWorld _ _ _ _ _) = do
+handlePelletWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(PelletWorld _ _ _ _ _ _) = do
+  let (_,loc,_) = player w
+  return PelletWorld {
+    space = space w,
+    player = player w,
+    bullets = bullets w ++ [((bulletOb,loc,forward 20),90)],
+    pellet = pellet w,
+    score = score w,
+    keys = keys w
+  }
+handlePelletWorld k w@(PelletWorld _ _ _ _ _ _) = do
                         let (pObj,pLoc,_) = (player w)
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
@@ -107,6 +120,7 @@ handlePelletWorld k w@(PelletWorld _ _ _ _ _) = do
                         return PelletWorld {
                           space = space w,
                           player = (pObj,pLoc,newMot),
+                          bullets = bullets w,
                           pellet = pellet w,
                           score = score w,
                           keys = newKeys

@@ -22,7 +22,10 @@ type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
 testob::Object
-testob =[(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue ) , (Circ ((50,0),10) , cyan )]
+testob =move ((0,-20),(False,0)) [(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue ) , (Circ ((50,0),10) , cyan )]
+
+bulletOb::Object
+bulletOb = [(Pol [(-10,0),(-8,10),(0,20),(8,10),(10,0)],black)]
 
 objectToPicture :: Object -> Picture
 objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ drawShape xs) o

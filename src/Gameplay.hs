@@ -28,27 +28,28 @@ data World = PelletWorld {
                     backGround :: World -- world to be rendered as backGround
                   }
 
-testPelletWorld = do
-              p <- getPellet 500
-              return PelletWorld {space=kh 250 250,player=testMovOb,pellet=p,score=0,keys = allOff}
+testPelletWorld :: Float -> Float -> IO World
+testPelletWorld x y = do
+              p <- getPellet x y
+              return PelletWorld {space=kh (x/2) (y/2),player=testMovOb,pellet=p,score=0,keys = allOff}
 
-getPellet :: Float -> IO MovingObj
-getPellet size = do
+getPellet :: Float -> Float -> IO MovingObj
+getPellet sx sy = do
               g <- getStdGen
               let (x,g2) = random g :: (Float,StdGen)
               let (y,g3) = random g2 :: (Float,StdGen)
               setStdGen g3
-              let loc = ((size*(x-0.5),size*(y-0.5)),(False,0::Float))
+              let loc = ((sx*(x-0.5),sy*(y-0.5)),(False,0::Float))
               return (pelletTemplate,loc,id)--id means the pelet isn't moving
 
 
 --stepWorld
-gameplay :: Float -> World -> IO World
-gameplay f w@(PelletWorld _ _ _ _ _) = do
+gameplay :: Float -> Float -> Float -> World -> IO World
+gameplay x y f w@(PelletWorld _ _ _ _ _) = do
               let s = space w
               let spaceTick = tick s
               let tickedP = spaceTick (player w)
-              p <- getPellet 500
+              p <- getPellet x y
               let pelletTaken = collides s (getLoc tickedP) (getLoc (pellet w))
               let oldKeys = keys w
               return PelletWorld {
@@ -58,16 +59,15 @@ gameplay f w@(PelletWorld _ _ _ _ _) = do
                  score = if pelletTaken then score w + 1 else score w,
                  keys = oldKeys
                }
-gameplay f w@(Pause _ _ _) = return w
+gameplay _ _ f w@(Pause _ _ _) = return w
 
 
 --render
 renderPelletWorld :: World -> IO Picture
 renderPelletWorld w@(PelletWorld _ _ _ _ _) = do
-                    let grid = renderGrid 10 500 500
                     let playerPic = spaceDraw (space w) (getLoc (player w))
                     let pelletPic = spaceDraw (space w) (getLoc (pellet w))
-                    return $ Pictures [grid,playerPic,pelletPic,renderScore w]
+                    return $ Pictures [playerPic,pelletPic,renderScore w]
 renderPelletWorld (Pause s os bg) = do
                     bgp <- renderPelletWorld bg
                     let oc = length os

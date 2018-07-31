@@ -22,7 +22,7 @@ isCirc (Pol _)  = False
 isCirc _        = error "What the fuck?"
 
 shapeColision::Shape->Shape->Bool
-shapeColision (Circ (pt1,r1)) (Circ (pt2,r2)) = l2 pt1 pt2 < r1 + r2
+shapeColision (Circ (pt1,r1)) (Circ (pt2,r2)) =  (l2 pt1 pt2) < (r1 + r2) -3
 shapeColision p1@(Pol pts1) p2@(Pol pts2) = (or [contains p1 pt | pt <- pts2 ]) || (or [contains p2 pt | pt <- pts1 ])
 shapeColision s@(Circ (c,r)) p@(Pol pts) = or $ [contains p c]++[traceShowId $ circleHasLine s l | l <- lines p]
 shapeColision a b = shapeColision b a

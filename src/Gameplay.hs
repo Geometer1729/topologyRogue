@@ -5,53 +5,57 @@ import           Object
 import           Space
 import           System.Random
 import Collision
-
+import Motion
+import SpaceRenderer
 
 pelletTemplate :: Object
 pelletTemplate = [(Circ ((0,0),10),red)]
 
 data PelletWorld = PelletWorld {
-                    pelletTaken :: Bool,
                     space       :: Space,
-                    player      :: LocalObj,
-                    pellet      :: LocalObj,
-                    score       :: Int
+                    player      :: MovingObj,
+                    pellet      :: MovingObj,
+                    score       :: Int,
+                    keys :: ArrowState
                   }
 
 testPelletWorld = do
               p <- getPellet 500
-              return PelletWorld {pelletTaken=False,space=t2 250 250,player=testlocob,pellet=p,score=0}
+              return PelletWorld {space=t2 250 250,player=testMovOb,pellet=p,score=0,keys = allOff}
 
-getPellet :: Float -> IO LocalObj
+getPellet :: Float -> IO MovingObj
 getPellet size = do
               g <- getStdGen
               let (x,g2) = random g :: (Float,StdGen)
               let (y,g3) = random g2 :: (Float,StdGen)
               setStdGen g3
               let loc = ((size*(x-0.5),size*(y-0.5)),(False,0::Float))
-              return (pelletTemplate,loc)
+              return (pelletTemplate,loc,id)--id means the pelet isn't moving
 
 
 --stepWorld
 gameplay :: Float -> PelletWorld -> IO PelletWorld
 gameplay f w = do
               let s = space w
-              let fixP = localReduce s (player w)
+              let spaceTick = tick s
+              let tickedP = spaceTick (player w)
               p <- getPellet 500
+              let pelletTaken = collides s (getLoc tickedP) (getLoc (pellet w))
+              let oldKeys = keys w
               return PelletWorld {
-                 pelletTaken=False,
                  space=s,
-                 player = fixP,
-                 pellet = if pelletTaken w then p else pellet w,
-                 score = if pelletTaken w then score w + 1 else score w
+                 player = tickedP,
+                 pellet = if pelletTaken then p else pellet w,
+                 score = if pelletTaken then score w + 1 else score w,
+                 keys = oldKeys
                }
 
 --render
 renderPelletWorld :: PelletWorld -> IO Picture
 renderPelletWorld w = do
                     let grid = renderGrid 10 500 500
-                    let playerPic = spaceDraw (space w) (player w)
-                    let pelletPic = spaceDraw (space w) (pellet w)
+                    let playerPic = spaceDraw (space w) (getLoc (player w))
+                    let pelletPic = spaceDraw (space w) (getLoc (pellet w))
                     return $ Pictures [grid,playerPic,pelletPic,renderScore w]
 
 renderScore :: PelletWorld -> Picture
@@ -64,25 +68,46 @@ renderScore p = let s = score p
 --input
 handlePelletWorld :: Event -> PelletWorld -> IO PelletWorld
 handlePelletWorld k w = do
-                        let playerObj = fst (player w)
-                        let playerLoc = snd (player w)
-                        let newLoc = keyPressMove k playerLoc
-                        let c = collides (space w) (player w) (pellet w)
+                        let (pObj,pLoc,_) = (player w)
+                        let oldKeys = keys w
+                        let newKeys = keyPressMove k oldKeys
+                        let newMot = arrowToMot newKeys
                         return PelletWorld {
-                          pelletTaken = c, --use collision detection here
                           space = space w,
-                          player = (playerObj,newLoc),
+                          player = (pObj,pLoc,newMot),
                           pellet = pellet w,
-                          score = score w
+                          score = score w,
+                          keys = newKeys
                         }
 
 
 
-keyPressMove :: Event -> Location -> Location
-keyPressMove (EventKey k downkey mods f@(x,y)) l = case k of
-                                                    (SpecialKey KeyUp) -> comp (up 10) l
-                                                    (SpecialKey KeyDown) -> comp (down 10) l
-                                                    (SpecialKey KeyLeft) -> comp (left 10) l
-                                                    (SpecialKey KeyRight) -> comp (right 10) l
-                                                    _ -> l
+keyPressMove :: Event -> ArrowState -> ArrowState
+keyPressMove (EventKey k ks mods f@(x,y)) as = case k of
+                                                    (SpecialKey KeyUp) -> as {kup = kd}
+                                                    (SpecialKey KeyDown) -> as {kdown = kd}
+                                                    (SpecialKey KeyLeft) -> as {kleft= kd}
+                                                    (SpecialKey KeyRight) -> as {kright = kd}
+                                                    _ -> as
+                                                    where
+                                                      kd = isDown ks
 keyPressMove _ l = l
+
+
+data ArrowState = ArrowState{
+kup :: Bool,
+kdown :: Bool,
+kleft :: Bool,
+kright :: Bool
+}
+
+allOff::ArrowState
+allOff = ArrowState False False False False
+
+arrowToMot:: ArrowState -> Motion
+arrowToMot (ArrowState u d l r) = um.dm.lm.rm
+  where
+    um = if u then mup 10 else id
+    dm = if d then mdown 10 else id
+    lm = if l then mleft 10 else id
+    rm = if r then mright 10 else id

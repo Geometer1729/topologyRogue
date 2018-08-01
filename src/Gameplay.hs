@@ -33,7 +33,7 @@ data World = PelletWorld {
 testPelletWorld :: Float -> Float -> IO World
 testPelletWorld x y = do
               p <- getPellet x y
-              return PelletWorld {space=kh (x/2) (y/2),player=testMovOb,pellet=p,bullets=[],score=0,keys = allOff, time=0}
+              return PelletWorld {space=rp2 (x/2) (y/2),player=testMovOb,pellet=p,bullets=[],score=0,keys = allOff, time=0}
 
 getPellet :: Float -> Float -> IO MovingObj
 getPellet sx sy = do

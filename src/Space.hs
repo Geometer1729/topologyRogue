@@ -1,12 +1,18 @@
 module Space where
 import           Graphics.Gloss
 import           Object
+import Debug.Trace
+
+tau::Float -- take that warren
+tau=2*pi
 
 testlocob :: LocalObj
 testlocob = (testob,((0,0),(False,0::Float)))
 
 localBullet:: LocalObj
 localBullet = (bulletOb,((0,0),(False,0::Float)))
+
+type Motion = (Point,Float)
 
 type Space = [(Boundary,LocRule,MotRule)]
 
@@ -43,14 +49,17 @@ flipX l h = [leftRule,rightRule]
     leftMotRule  ((x,y),r) = ((x,-y),r)
     rightMotRule ((x,y),r) = ((x,-y),r)
 
-
-
-
-{-
-flipY::Float->Float -> Space
-flipY l h = [ ( (\ ((x,y),_) -> y < l) , (\ ((x,y),(f,t)) -> (((h+l-x,y+h-l),(not f,t)  )  ) ) )
-            , ( (\ ((x,y),_) -> y > h) , (\ ((x,y),(f,t)) -> (((h+l-x,y+l-h),(not f,t)  )  ) ) )]
--}
+flipY::Float -> Float -> Space
+flipY l h = [topRule,bottomRule]
+  where
+    topRule  = (topCon,topLocRule,topMotRule)
+    bottomRule = (bottomCon,bottomLocRule,bottomMotRule)
+    topCon        ((x,y),_)     = y > h
+    bottomCon     ((x,y),_)     = y < l
+    topLocRule    ((x,y),(f,t)) = ((h+l-x,y-h+l),(not f,tau/2-t))
+    bottomLocRule ((x,y),(f,t)) = ((h+l-x,y+h-l),(not f,tau/2-t))
+    topMotRule    ((x,y),r)     = ((-x,y),r)
+    bottomMotRule ((x,y),r)     = ((-x,y),r)
 
 t2::Float ->Float ->Space
 t2 w h = wrapX (-w) w ++ wrapY (-h) h
@@ -58,13 +67,13 @@ t2 w h = wrapX (-w) w ++ wrapY (-h) h
 kh::Float ->Float ->Space
 kh w h = flipX (-w) w ++ wrapY (-h) h
 
-{-
+
 kv::Float ->Float ->Space
 kv w h = wrapX (-w) w ++ flipY (-h) h
 
 rp2::Float ->Float ->Space
 rp2 w h = flipX (-w) w ++ flipY (-h) h
--}
+
 
 spaceAdd::Space->Location->Location->Location
 spaceAdd s v1 v2 = spaceReduce s $ comp v1 v2

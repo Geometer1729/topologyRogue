@@ -18,17 +18,17 @@ pelletTemplate :: Object
 pelletTemplate = [(Circ ((0,0),10),red)]
 
 data World = PelletWorld {
-                    space       :: Space,
-                    player      :: MovingObj,
-                    bullets     :: [(MovingObj,Int)],
-                    pellet      :: MovingObj,
-                    score       :: Int,
-                    keys :: ArrowState,
-                    time :: Float
+                    space         :: Space,
+                    player        :: MovingObj,
+                    bullets       :: [(MovingObj,Int)],
+                    pellet        :: MovingObj,
+                    score         :: Int,
+                    keys          :: ArrowState,
+                    time          :: Float
                   } | Pause {
-                    selection :: Int,
-                    buttons:: [(String,World)],
-                    backGround :: World -- world to be rendered as backGround
+                    selection     :: Int,
+                    buttons       :: [(String,World)],
+                    backGround    :: World -- world to be rendered as backGround
                   }
 
 testPelletWorld :: Float -> Float -> IO World
@@ -171,22 +171,16 @@ keyToPol (ArrowState u d l r) loc = trace (show (um,dm,lm,rm,foldl add still [um
     um = if u then forward  10 loc else still
     dm = if d then backward 10 loc else still
     lm = if l then ccw 0.1 else still
-    rm = if r then cw 0.1 else still
+    rm = if r then cw 0.1  else still
 
 ccw::Float -> Motion
 ccw dtheta = ((0,0),dtheta)
 
-cw::Float -> Motion
+cw::Float ->  Motion
 cw x = ccw (-1*x)
 
 forward::Float -> Location -> Motion
-forward x (_,(f,theta)) = traceShowId $ ((cos thetaa * x,sin thetaa * x),0)
-  where
-    thetaa = maybeNeg f theta
+forward x (_,(f,theta)) = traceShowId $ ((cos theta * x,sin theta * x),0)
 
 backward::Float -> Location -> Motion
 backward x = forward (-1*x)
-
-maybeNeg::Bool->Float->Float
-maybeNeg False = id
-maybeNeg True = (*) (-1)

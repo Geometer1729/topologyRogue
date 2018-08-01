@@ -1,5 +1,5 @@
 module Object where
-  
+
 import           Data.Bits
 import           Graphics.Gloss
 
@@ -20,10 +20,10 @@ type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
 testob::Object
-testob =move ((0,-20),(False,0)) [(Pol [(-50,0),(0,50),(50,0)],black) , (Pol [(-30,-5),(0,70),(30,-5)],red) , (Circ ((0,50),25) , blue ) , (Circ ((50,0),10) , cyan )]
+testob =move ((-20,0),(False,0)) [(Pol [(0,-50),(50,0),(0,50)],black) , (Pol [(-5,-30),(70,0),(-5,30)],red) , (Circ ((50,0),25) , blue ) , (Circ ((0,50),10) , cyan )]
 
 bulletOb::Object
-bulletOb = [(Pol [(-10,0),(0,20),(10,0)],black)]
+bulletOb = [(Pol [(0,-10),(10,-8),(20,0),(10,8),(0,10)],black)]
 
 objectToPicture :: Object -> Picture
 objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ drawShape xs) o

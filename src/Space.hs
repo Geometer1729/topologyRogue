@@ -14,8 +14,8 @@ type Boundary = Location -> Bool
 
 type Rule = Location -> Location
 
-still::Location
-still = ((0,0),(False,0))
+centered::Location
+centered = ((0,0),(False,0))
 
 vecToLoc::Point->Location
 vecToLoc x = (x,(False,0))

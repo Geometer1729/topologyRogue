@@ -42,16 +42,16 @@ getPellet sx sy = do
               let (x,g2) = random g :: (Float,StdGen)
               let (y,g3) = random g2 :: (Float,StdGen)
               setStdGen g3
-              let loc = ((sx*(x-0.5),sy*(y-0.5)),(False,0::Float))
-              return (pelletTemplate,loc,id)--id means the pelet isn't moving
+              let loc = ((sx*(x-0.5),sy*(y-0.5)),(False,0::Float)) :: Location
+              return (pelletTemplate,loc,((0,0),0)) --id means the pelet isn't moving
 
 
 --stepWorld
 gameplay :: Float -> Float -> Float -> World -> IO World
 gameplay x y f w@(PelletWorld _ _ _ _ _ _ _) = do
               let s = space w
-              let spaceTick = tick s
-              let tickedP = spaceTick (player w)
+              let (po,pl,pm) = player w
+              let tickedP = (po, spaceReduce s (app pm pl) , keyToPol (keys w) (spaceReduce s (app pm pl))) -- can't be standard tick as motion needs to be re interpreted
               p <- getPellet x y
               let pelletTaken = or [ (collides s (getLoc (pellet w))) o | o <- (getLoc tickedP):(map (getLoc.fst) (bullets w)) ]
               let oldKeys = keys w
@@ -116,7 +116,7 @@ handlePelletWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(PelletWorld _ _ _
   return PelletWorld {
     space = space w,
     player = player w,
-    bullets = bullets w ++ [( (bulletOb,forward 60 loc,forward 20),90)],
+    bullets = bullets w ++ [( (bulletOb, app (forward 60 loc)$ loc,forward 20 loc),90)],
     pellet = pellet w,
     score = score w,
     keys = keys w,
@@ -126,7 +126,7 @@ handlePelletWorld k w@(PelletWorld _ _ _ _ _ _ _) = do
                         let (pObj,pLoc,_) = (player w)
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
-                        let newMot = keyToPol newKeys
+                        let newMot = traceShowId $ keyToPol newKeys pLoc
                         return PelletWorld {
                           space = space w,
                           player = (pObj,pLoc,newMot),
@@ -164,34 +164,27 @@ kright :: Bool
 allOff::ArrowState
 allOff = ArrowState False False False False
 
-keyToCart:: ArrowState -> Motion
-keyToCart (ArrowState u d l r) = um.dm.lm.rm
-  where
-    um = if u then mup 10 else id
-    dm = if d then mdown 10 else id
-    lm = if l then mleft 10 else id
-    rm = if r then mright 10 else id
 
-keyToPol:: ArrowState -> Motion
-keyToPol (ArrowState u d l r) = um.dm.lm.rm
+keyToPol:: ArrowState -> Location -> Motion
+keyToPol (ArrowState u d l r) loc = trace (show (um,dm,lm,rm,foldl add still [um,dm,lm,rm])) $ foldl add still [um,dm,lm,rm]
   where
-    um = if u then forward 10 else id
-    dm = if d then backward 10 else id
-    lm = if l then ccw 0.1 else id
-    rm = if r then cw 0.1 else id
+    um = if u then forward  10 loc else still
+    dm = if d then backward 10 loc else still
+    lm = if l then ccw 0.1 else still
+    rm = if r then cw 0.1 else still
 
 ccw::Float -> Motion
-ccw dtheta (pt,(f,theta)) = (pt,(f,theta+(maybeNeg f dtheta)))
+ccw dtheta = ((0,0),dtheta)
 
 cw::Float -> Motion
 cw x = ccw (-1*x)
 
-forward::Float -> Motion
-forward x l@(pt,(f,theta)) = comp (vecToLoc (cos thetar * x,sin thetar * x)) l
+forward::Float -> Location -> Motion
+forward x (_,(f,theta)) = traceShowId $ ((cos thetaa * x,sin thetaa * x),0)
   where
-    thetar = theta + pi /2
+    thetaa = maybeNeg f theta
 
-backward::Float -> Motion
+backward::Float -> Location -> Motion
 backward x = forward (-1*x)
 
 maybeNeg::Bool->Float->Float

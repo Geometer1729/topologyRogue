@@ -63,10 +63,10 @@ dups::Space->LocalObj->[LocalObj] -- takes a space and an object produces a list
 dups s o = rollingDups s [o]
 
 rollingDups::Space->[LocalObj]->[LocalObj]
-rollingDups [] os = os
-rollingDups ((b,r):ns) os = if colides then rollingDups ns $ os ++ map (\ (o,l) -> (o, r l)) os else rollingDups ns os
+rollingDups [] objects = objects
+rollingDups ((boundary, rule):next) objects = if collides then rollingDups next $ objects ++ map (\ (object, location) -> (object, rule location)) objects else rollingDups next objects
   where
-    colides =  or . (map (b . vecToLoc)) . getPts . concat $ map (uncurry .flip $ move) os :: Bool
+    colides =  or . (map (boundary . vecToLoc)) . getPts . concat $ map (uncurry .flip $ move) objects :: Bool
 
 spaceDraw::Space-> LocalObj -> Picture
 spaceDraw s o = Pictures . (map objectToPicture) . map (uncurry (flip move)) $ dups s o

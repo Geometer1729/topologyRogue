@@ -6,7 +6,6 @@ import Object
 import Space
 import System.Random
 import Collision
-import Motion
 import Debug.Trace
 
 

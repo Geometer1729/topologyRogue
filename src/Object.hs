@@ -3,6 +3,8 @@ module Object where
 import           Data.Bits
 import           Graphics.Gloss
 
+type Motion = (Point,Float)
+
 type LocalObj = (Object,Location)
 
 data Shape = Pol Polygon | Circ Circle
@@ -53,7 +55,7 @@ maybeMirror::Bool -> Object -> Object
 maybeMirror mi = if mi then mapPts ptFlip else id
 
 ptFlip::Point -> Point
-ptFlip (x,y) = (-x,y)
+ptFlip (x,y) = (x,-y)
 
 spin::Float -> Object->Object
 spin theta = mapPts (ptSpin theta)

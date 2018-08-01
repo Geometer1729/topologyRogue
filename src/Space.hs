@@ -62,14 +62,16 @@ spaceCheck s p = or [ fst r p | r <- s]
 dups::Space->LocalObj->[LocalObj] -- takes a space and an object produces a list of posible render positons of that object
 dups s o = rollingDups s [o]
 
-rollingDups::Space->[LocalObj]->[LocalObj]
-rollingDups [] os = os
-rollingDups ((b,r):ns) os = if colides then rollingDups ns $ os ++ map (\ (o,l) -> (o, r l)) os else rollingDups ns os
+rollingDups :: Space -> [LocalObj] -> [LocalObj]
+rollingDups [] objects = objects
+rollingDups ((boundary, rule):next) objects = if collides then rollingDups next $ objects ++ map (\ (object, location) -> (object, rule location)) objects else rollingDups next objects
   where
-    colides =  or . (map (b . vecToLoc)) . getPts . concat $ map (uncurry .flip $ move) os :: Bool
+    collides =  or . (map (boundary . vecToLoc)) . getPts . concat $ moveLocalObjects objects :: Bool
 
-spaceDraw::Space-> LocalObj -> Picture
-spaceDraw s o = Pictures . (map objectToPicture) . map (uncurry (flip move)) $ dups s o
+spaceDraw :: Space -> LocalObj -> Picture
+spaceDraw s o = Pictures . (map objectToPicture) . moveLocalObjects $ dups s o
+
+moveLocalObjects = map (uncurry . flip $ move) 
 
 localReduce::Space->LocalObj->LocalObj
 localReduce s = fmap (spaceReduce s)

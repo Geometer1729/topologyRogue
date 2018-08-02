@@ -24,6 +24,8 @@ type Orientation = (Bool,Float)
 testob::Object
 testob =move ((-20,0),(False,0)) [(Pol [(0,-50),(50,0),(0,50)],black) , (Pol [(-5,-30),(70,0),(-5,30)],red) , (Circ ((50,0),25) , blue ) , (Circ ((0,50),10) , cyan )]
 
+
+
 bulletOb::Object
 bulletOb = [(Pol [(0,-10),(10,-8),(20,0),(10,8),(0,10)],black)]
 

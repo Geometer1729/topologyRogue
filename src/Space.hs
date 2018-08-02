@@ -122,8 +122,11 @@ maybeNeg True = (*) (-1)
 tick::Space -> MovingObj->MovingObj
 tick s p@(o,l,m) = motReduce s (o, app m l, m)
 
+test0= [(Pol [(83,247),(86,340),(281,405),(238,305),(230,219)],makeColorI 63 72 204 255),(Pol [(29,196),(173,228),(230,218),(234,240),(346,262),(448,129),(240,174),(247,148),(179,9)],makeColorI 237 28 36 255)]
+
+
 testMovOb :: MovingObj
-testMovOb = (testob,((0,0),(False,0::Float)),((0,0),0))
+testMovOb = (test0,((0,0),(False,0::Float)),((0,0),0))
 
 getLoc::MovingObj->LocalObj
 getLoc (o,l,m) = (o,l)

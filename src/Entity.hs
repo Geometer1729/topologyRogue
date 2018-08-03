@@ -61,6 +61,7 @@ halfCollisionHandle:: Entity -> Entity -> [Outcome]
 halfCollisionHandle (Player _ _)     (PlayerProj _ _) = [ Entity (Second,Kill)]
 halfCollisionHandle (Player _ _)     (Pellet _)       = [Entity (Second,Kill), World $ IncScore 1]
 halfCollisionHandle (PlayerProj _ _) (Pellet _)       = [Entity (Second,Kill), World $ IncScore 1]
+halfCollisionHandle (PlayerProj _ _) (PlayerProj _ _) = [Entity (First,Kill),Entity (Second,Kill)]
 halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
 
 findCollisions::Space -> [Entity] -> [(Int,Int)]
@@ -73,7 +74,7 @@ triangleList::Int -> [(Int,Int)]
 triangleList n = concat [upto m | m <- [0..n] ]
   where
     upto:: Int -> [(Int,Int)]
-    upto n = [(m,n) | m <- [0..n]]
+    upto n = [(m,n) | m <- [0..n-1]]
 
 isWorld::Outcome -> Bool
 isWorld (World _) = True

@@ -64,9 +64,9 @@ collisionHandle::Entity -> Entity -> [Outcome]
 collisionHandle a b = (halfCollisionHandle a b) ++ (halfCollisionHandle b a)
 
 halfCollisionHandle:: Entity -> Entity -> [Outcome]
-halfCollisionHandle(Player _ _) (PlayerProj _ _) = [ Entity (Second,Kill)]
-halfCollisionHandle(Player _ _) (Pellet _) = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle(PlayerProj _ _) (Pellet _) = [Entity (First,Kill), World $ IncScore 1]
+halfCollisionHandle (Player _ _)     (PlayerProj _ _) = [ Entity (Second,Kill)]
+halfCollisionHandle (Player _ _)     (Pellet _)       = [Entity (Second,Kill), World $ IncScore 1]
+halfCollisionHandle (PlayerProj _ _) (Pellet _)       = [Entity (Second,Kill), World $ IncScore 1]
 halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
 
 findCollisions::Space -> [Entity] -> [(Int,Int)]
@@ -141,6 +141,6 @@ motionTick s e = setOb moved e
     moved = tick s (getOb e) :: MovingObj
 
 tryToShoot::Entity -> [Entity]
-tryToShoot (Player (_,l,_) 0) = [PlayerProj (bulletOb, app ( forward 60 l)$ l,forward 20 l) 90 ]
-tryToShoot (Player _ _) = []
-tryToShoot _ = []
+tryToShoot (Player o@(_,l,_) 0) = [Player o 10 , PlayerProj (bulletOb, app ( forward 60 l)$ l,forward 20 l) 90 ]
+tryToShoot e@(Player _ _) = [e]
+tryToShoot x = [x]

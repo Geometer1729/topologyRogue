@@ -136,3 +136,18 @@ add ((x1,y1),w1) ((x2,y2),w2) = ((x1+x2,y1+y2),w1+w2)
 
 still::Motion
 still = ((0,0),0)
+
+setMot::Motion -> MovingObj -> MovingObj
+setMot m (o,l,_) = (o,l,m)
+
+ccw::Float -> Motion
+ccw dtheta = ((0,0),dtheta)
+
+cw::Float ->  Motion
+cw x = ccw (-1*x)
+
+forward::Float -> Location -> Motion
+forward x (_,(f,theta)) = traceShowId $ ((cos theta * x,sin theta * x),0)
+
+backward::Float -> Location -> Motion
+backward x = forward (-1*x)

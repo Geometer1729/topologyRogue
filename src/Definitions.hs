@@ -3,7 +3,11 @@ module Definitions where
 import Graphics.Gloss
 
 --Entity types
-data Entity = Player MovingObj Int | PlayerProj MovingObj Int | Pellet MovingObj
+data Entity = Player {ob ::MovingObj, cooldown :: Int}
+              | PlayerProj {ob ::MovingObj, life :: Int}
+              | Pellet { ob :: MovingObj }
+              | Enemy { ob :: MovingObj , cooldown :: Int , targeted :: Bool}
+              | EnemyProj { ob :: MovingObj , life :: Int}
 data Outcome =  Entity EntityOutcome | World WorldOutcome
 data WorldOutcome =  EndGame | IncScore Int | SetScore Int
 type EntityOutcome = (Who,EntityEffect)
@@ -26,6 +30,10 @@ testob::Object
 testob =[(Pol [(-20,-50),(30,0),(-20,50)],black) , (Pol [(-25,-30),(50,0),(-25,30)],red) , (Circ ((30,0),25) , blue ) , (Circ ((-20,50),10) , cyan )]
 bulletOb::Object
 bulletOb = [(Pol [(0,-10),(10,-8),(20,0),(10,8),(0,10)],black)]
+enemyOb::Object
+enemyOb = [(Pol [(-20,-20),(-20,20),(20,20),(20,-20)], black)]
+laserOb::Object
+laserOb = [(Pol [(-20,-2),(-20,2),(20,2),(20,-2)], red)]
 
 --Space types
 type Motion = (Point,Float)
@@ -85,3 +93,9 @@ playerSpeed :: Float
 playerSpeed = 10
 playerTurnSpeed :: Float
 playerTurnSpeed = 0.1
+enemyCooldown::Int
+enemyCooldown = 10 -- perfectly balanced as all things should be
+laserSpeed :: Float
+laserSpeed = 40
+laserLife :: Int
+laserLife = 15

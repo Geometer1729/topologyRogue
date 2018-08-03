@@ -20,7 +20,7 @@ isDown _    = False
 testPelletWorld :: Float -> Float -> IO World
 testPelletWorld x y = do
               p <- getPellet x y
-              return PelletWorld {space=kh (x/2) (y/2),entities = [Player testMovOb 0, p],score=0,keys = allOff, time=0}
+              return PelletWorld {space=kh (x/2) (y/2),entities = [Player testMovOb 0, p,Enemy (enemyOb,((300,0),(False,0)),((0,0),0.1)) 10 True ] ,score=0,keys = allOff, time=0}
 
 getPellet :: Float -> Float -> IO Entity
 getPellet sx sy = do
@@ -57,9 +57,9 @@ gameplay _ _ f w@(Pause _ _ _) = return w
 
 
 adjustPlayerMotion:: Controls -> Entity -> Entity
-adjustPlayerMotion keys p = setOb ( setMot (keyToPol keys l) $ ob) p
+adjustPlayerMotion keys p = p { ob = ( setMot (keyToPol keys l) $ o) }
   where
-    ob@(_,l,_) = getOb p
+    o@(_,l,_) = ob p
 
 --render
 renderPelletWorld :: World -> IO Picture
@@ -122,14 +122,8 @@ keyPressMove (EventKey k ks mods f@(x,y)) c = case k of
                                                     (SpecialKey KeySpace) -> c {spaceBar = kd}
                                                     _ -> c
                                                     where
-                                                      kd = isDown ks
+                                                  kd = isDown ks
 keyPressMove _ l = l
-
-
-
-
-
-
 
 keyToPol:: Controls -> Location -> Motion
 keyToPol (Controls u d l r _) loc = trace (show (um,dm,lm,rm,foldl add still [um,dm,lm,rm])) $ foldl add still [um,dm,lm,rm]

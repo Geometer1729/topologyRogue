@@ -9,39 +9,62 @@ import Object
 import Collision
 import Graphics.Gloss
 
-
-
-getOb::Entity -> MovingObj
-getOb (Player x _) = x
-getOb (PlayerProj x _) = x
-getOb (Pellet x) = x
-
-entityDraw::Space -> Entity -> Picture
-entityDraw s = (spaceDraw s) . getLoc . getOb
-
-setOb::MovingObj -> Entity -> Entity
-setOb m (Player _ t) = Player m t
-setOb m (PlayerProj _ l) = PlayerProj m l
-setOb m (Pellet _) = Pellet m
+-- non general code
 
 isPlayer::Entity -> Bool
-isPlayer (Player _ _) = True
+isPlayer e@Player{} = True
 isPlayer _ = False
 
 isPlayerProj::Entity -> Bool
-isPlayerProj (PlayerProj _ _) = True
+isPlayerProj p@PlayerProj{} = True
 isPlayerProj _ = False
 
 isPellet::Entity -> Bool
-isPellet (Pellet _) = True
+isPellet e@Pellet{} = True
 isPellet _ = False
 
+isEnemy::Entity -> Bool
+isEnemy e@Enemy{} = True
+isEnemy _ = False
+
+isEnemyProj::Entity -> Bool
+isEnemyProj e@EnemyProj{} = True
+isEnemyProj _ = False
+
+halfCollisionHandle:: Entity -> Entity -> [Outcome]
+halfCollisionHandle e@Player{}     f@PlayerProj{} = [ Entity (Second,Kill)]
+halfCollisionHandle e@Player{}     f@Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
+halfCollisionHandle e@PlayerProj{} f@Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
+halfCollisionHandle e@PlayerProj{} f@PlayerProj{} = [Entity (First,Kill)]  -- still kills both
+halfCollisionHandle e@Player{}     f@EnemyProj{}  = [Entity (First,Kill)]
+halfCollisionHandle e@PlayerProj{} f@Enemy{}      = [Entity (Second,Kill), World $ IncScore 10]
+halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
+
+entityTick::Entity -> [Entity]
+entityTick p@Player{cooldown = c} = [p { cooldown = max 0 (c-1)}] -- decriment fire cooldown
+entityTick PlayerProj{life = 0} = [] -- kill if lifespan is 0
+entityTick p@PlayerProj{life = l} = [p { life = max 0 (l-1)}] -- decriment life span
+entityTick e@Enemy{targeted = True , cooldown = 0 ,ob = (_,l,_) } = [e{cooldown = enemyCooldown},EnemyProj (laserOb, app ( forward 50 l)$ l,forward laserSpeed l) laserLife]
+entityTick e@Enemy{cooldown = c} = [e { cooldown = max 0 (c-1)}]
+entityTick EnemyProj{life = 0} = [] -- kill if lifespan is 0
+entityTick p@EnemyProj{life = l} = [p { life = max 0 (l-1)}] -- decriment life span
+entityTick x = [x] -- tick is id for unspecified
+
+tryToShoot::Entity -> [Entity] -- only for player other entitys must use entityTick to shoot
+tryToShoot p@Player{ob = o@(_,l,_), cooldown = 0} = [p {cooldown = fireCoolDown} , PlayerProj (bulletOb, app ( forward 60 l)$ l,forward bulletSpeed l) bulletLife ]
+tryToShoot e@Player{} = [e]
+tryToShoot x = [x]
+
+-- general code
+
+entityDraw::Space -> Entity -> Picture
+entityDraw s = (spaceDraw s) . getLoc . ob
 
 entitiesCollide::Space -> Entity -> Entity -> Bool
 entitiesCollide s a b = collides s (newLoc a) (newLoc b)
   where
     newLoc :: Entity -> LocalObj
-    newLoc = getLoc . (tick s) . getOb
+    newLoc = getLoc . (tick s) . ob
 
 flipWho::Who->Who
 flipWho First = Second
@@ -56,13 +79,6 @@ flipOutcome (Entity x) = Entity $ flipEntityOutcome x
 
 collisionHandle::Entity -> Entity -> [Outcome]
 collisionHandle a b = (halfCollisionHandle a b) ++ (halfCollisionHandle b a)
-
-halfCollisionHandle:: Entity -> Entity -> [Outcome]
-halfCollisionHandle (Player _ _)     (PlayerProj _ _) = [ Entity (Second,Kill)]
-halfCollisionHandle (Player _ _)     (Pellet _)       = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle (PlayerProj _ _) (Pellet _)       = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle (PlayerProj _ _) (PlayerProj _ _) = [Entity (First,Kill),Entity (Second,Kill)]
-halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
 
 findCollisions::Space -> [Entity] -> [(Int,Int)]
 findCollisions s es = filter check (triangleList $ length es -1)
@@ -115,27 +131,15 @@ getEntity:: Outcome -> EntityOutcome
 getEntity (Entity x) = x
 getEntity _ = error "Not an Entity Outcome"
 
-
 applyEntityEffects::(Entity,[EntityEffect]) -> [Entity]
 applyEntityEffects (e,[]) = [e]
 applyEntityEffects (e,(f:fs)) =  concat [ applyEntityEffects (r,fs) | r <- (applyEntityEffect f e)]
 
 applyEntityEffect::EntityEffect -> Entity -> [Entity] -- returning a list allows killing or firing
 applyEntityEffect Kill _ = []
-applyEntityEffect (Move m) e = [setOb  (setMot m $ getOb e) e]
-
-entityTick::Entity -> [Entity]
-entityTick (Player o h) = [Player o (max 0 (h-1))] -- decriment fire cooldown
-entityTick (PlayerProj _ 0) = [] -- kill if lifespan is 0
-entityTick (PlayerProj o l) = [PlayerProj o (max 0 (l-1))] -- decriment life span
-entityTick x = [x] -- tick is id for unspecified
+applyEntityEffect (Move m) e = [e { ob = setMot m $ ob e}]
 
 motionTick::Space -> Entity -> Entity
-motionTick s e = setOb moved e
+motionTick s e = e {ob = moved}
   where
-    moved = tick s (getOb e) :: MovingObj
-
-tryToShoot::Entity -> [Entity]
-tryToShoot (Player o@(_,l,_) 0) = [Player o fireCoolDown , PlayerProj (bulletOb, app ( forward 60 l)$ l,forward bulletSpeed l) bulletLife ]
-tryToShoot e@(Player _ _) = [e]
-tryToShoot x = [x]
+    moved = tick s (ob e) :: MovingObj

@@ -135,6 +135,6 @@ motionTick s e = setOb moved e
     moved = tick s (getOb e) :: MovingObj
 
 tryToShoot::Entity -> [Entity]
-tryToShoot (Player o@(_,l,_) 0) = [Player o 10 , PlayerProj (bulletOb, app ( forward 60 l)$ l,forward 20 l) 90 ]
+tryToShoot (Player o@(_,l,_) 0) = [Player o fireCoolDown , PlayerProj (bulletOb, app ( forward 60 l)$ l,forward bulletSpeed l) bulletLife ]
 tryToShoot e@(Player _ _) = [e]
 tryToShoot x = [x]

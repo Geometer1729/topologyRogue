@@ -109,7 +109,7 @@ test0= [(Pol [(83,247),(86,340),(281,405),(238,305),(230,219)],makeColorI 63 72 
 
 
 testMovOb :: MovingObj
-testMovOb = (test0,((0,0),(False,0::Float)),((0,0),0))
+testMovOb = (testob ,((0,0),(False,0::Float)),((0,0),0))
 
 getLoc::MovingObj->LocalObj
 getLoc (o,l,m) = (o,l)

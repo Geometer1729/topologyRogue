@@ -134,10 +134,10 @@ keyPressMove _ l = l
 keyToPol:: Controls -> Location -> Motion
 keyToPol (Controls u d l r _) loc = trace (show (um,dm,lm,rm,foldl add still [um,dm,lm,rm])) $ foldl add still [um,dm,lm,rm]
   where
-    um = if u then forward  10 loc else still
-    dm = if d then backward 10 loc else still
-    lm = if l then ccw 0.1 else still
-    rm = if r then cw 0.1  else still
+    um = if u then forward  playerSpeed loc else still
+    dm = if d then backward playerSpeed loc else still
+    lm = if l then ccw playerTurnSpeed else still
+    rm = if r then cw playerTurnSpeed  else still
 
 -- entity code that depends on world type
 

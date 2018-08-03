@@ -68,8 +68,20 @@ allOff = Controls False False False False False
 pelletTemplate :: Object
 pelletTemplate = [(Circ ((0,0),10),red)]
 
---Main objects
+--game Config
 windowWidth :: Float
 windowWidth = 1200
 windowHeight :: Float
 windowHeight = 700
+fireCoolDown:: Int
+fireCoolDown = 10
+bulletSpeed:: Float
+bulletSpeed = 30
+bulletRange :: Int
+bulletRange = 2700
+bulletLife :: Int
+bulletLife = round $ fromIntegral bulletRange / bulletSpeed
+playerSpeed :: Float
+playerSpeed = 10
+playerTurnSpeed :: Float
+playerTurnSpeed = 0.1

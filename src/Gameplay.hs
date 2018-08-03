@@ -20,7 +20,7 @@ isDown _    = False
 testPelletWorld :: Float -> Float -> IO World
 testPelletWorld x y = do
               p <- getPellet x y
-              return PelletWorld {space=kh (x/2) (y/2),entities = [Player testMovOb 0, p,Enemy (enemyOb,((300,0),(False,0)),((0,0),0.1)) 10 True ] ,score=0,keys = allOff, time=0}
+              return PelletWorld {space=kh (x/2) (y/2),entities = [Player testMovOb 0, p,Enemy (enemyOb,((300,0),(False,0)),((3,4),0.1)) 10 True ] ,score=0,keys = allOff, time=0}
 
 getPellet :: Float -> Float -> IO Entity
 getPellet sx sy = do

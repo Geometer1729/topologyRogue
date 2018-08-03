@@ -36,8 +36,9 @@ halfCollisionHandle e@Player{}     f@PlayerProj{} = [ Entity (Second,Kill)]
 halfCollisionHandle e@Player{}     f@Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
 halfCollisionHandle e@PlayerProj{} f@Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
 halfCollisionHandle e@PlayerProj{} f@PlayerProj{} = [Entity (First,Kill)]  -- still kills both
-halfCollisionHandle e@Player{}     f@EnemyProj{}  = [Entity (First,Kill)]
+halfCollisionHandle e@Player{}     f@EnemyProj{}  = [Entity (First,Kill), World EndGame]
 halfCollisionHandle e@PlayerProj{} f@Enemy{}      = [Entity (Second,Kill), World $ IncScore 10]
+halfCollisionHandle e@EnemyProj{}  f@Pellet{}     = [Entity (Second,Kill), World $ IncScore (-1)]
 halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
 
 entityTick::Entity -> [Entity]

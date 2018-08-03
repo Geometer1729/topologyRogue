@@ -58,7 +58,7 @@ data World = PelletWorld {
                     score         :: Int,
                     keys          :: Controls,
                     time          :: Float
-                  } | Pause {
+                  } | Menu {
                     selection     :: Int,
                     buttons       :: [(String,World)],
                     backGround    :: World -- world to be rendered as backGround not yet implemented wouldn't be hard I just don't know how to do opacity in Gloss

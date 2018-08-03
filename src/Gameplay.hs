@@ -46,14 +46,9 @@ gameplay x y f w@PelletWorld{} = do
               let es4 = concat $ map entityTick es3
               let es5 = map (motionTick s) es4
               let es6 = if pelletTaken then es5 ++ [p] else es5
-              return $ worldUpdate $ PelletWorld {
-                 space=s,
-                 entities = es6,
-                 score = score w,
-                 keys = keys w,
-                 time = f + time w
-               }
-gameplay _ _ f w@(Pause _ _ _) = return w
+              nextworld <- worldUpdate $ w {entities = es6 , time = f + time w}
+              return nextworld
+gameplay _ _ f w@(Menu _ _ _) = return w
 
 
 adjustPlayerMotion:: Controls -> Entity -> Entity
@@ -66,7 +61,7 @@ renderPelletWorld :: World -> IO Picture
 renderPelletWorld w@PelletWorld{} = do
                     let entPic = map (entityDraw (space w)) (entities w)
                     return $ Pictures $ entPic ++ [renderScore w, renderTimer w]
-renderPelletWorld (Pause s os bg) = do
+renderPelletWorld (Menu s os bg) = do
                     bgp <- renderPelletWorld bg
                     let oc = length os
                     let ops = [ (i == s,fromIntegral (25*oc-50*i) :: Float ,fst (os!!i)) | i <- [0..(oc -1)] ]
@@ -99,10 +94,10 @@ renderTimer w = let t = time w
 
 --input
 handlePelletWorld :: Event -> World -> IO World
-handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Pause x os bg) = return $ Pause (mod (x-1) (length os)) os bg
-handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Pause x os bg) = return $ Pause (mod (x+1) (length os)) os bg
-handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Pause x os bg) = return $ snd (os !! x)
-handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = return (Pause 0 [("Resume",w),("Save",w),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
+handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Menu x os bg) = return $ Menu (mod (x-1) (length os)) os bg
+handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Menu x os bg) = return $ Menu (mod (x+1) (length os)) os bg
+handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Menu x os bg) = return $ snd (os !! x)
+handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = return (Menu 0 [("Resume",w),("Save",w),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
 handlePelletWorld k w@PelletWorld{} = do
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
@@ -135,16 +130,21 @@ keyToPol (Controls u d l r _) loc = trace (show (um,dm,lm,rm,foldl add still [um
 
 -- entity code that depends on world type
 
-applyWorld::[WorldOutcome] -> World -> World
-applyWorld [] = id
-applyWorld (w:ws) = (applyWorldOutcome w) . (applyWorld ws)
+applyWorld::[WorldOutcome] -> World -> IO World
+applyWorld [] w = return w
+applyWorld (o:os) w = do
+  nw <- applyWorld os w
+  fw <- applyWorldOutcome o nw
+  return fw
 
-applyWorldOutcome:: WorldOutcome -> World -> World
-applyWorldOutcome EndGame  _ = error "Score Display menu thing not yet implemented"
-applyWorldOutcome (SetScore n) (PelletWorld s e _ k t)  = (PelletWorld s e n k t)
-applyWorldOutcome (IncScore n) (PelletWorld s e sc k t) = (PelletWorld s e (sc+n) k t)
+applyWorldOutcome:: WorldOutcome -> World -> IO World
+applyWorldOutcome EndGame  w = do
+  newWorld <- testPelletWorld windowWidth windowHeight
+  return $ Menu 0 [("PlayAgain",newWorld)] w
+applyWorldOutcome (SetScore n) (PelletWorld s e _ k t)  = return $ (PelletWorld s e n k t)
+applyWorldOutcome (IncScore n) (PelletWorld s e sc k t) = return $ (PelletWorld s e (sc+n) k t)
 
-handle:: Space -> [Entity] -> ([Entity],World->World)
+handle:: Space -> [Entity] -> ([Entity],World->IO World)
 handle s es = (newEnts, worldFunc)
   where
     (worldOuts,witheffects) = linkOutcomes s es

@@ -50,15 +50,16 @@ gameplay x y f w@PelletWorld{} = do
               let es = entities w
               let es1 = [if isPlayer e then adjustPlayerMotion (keys w) e else e | e <- es] -- could potentialy adjust multiple players
               p <- getPellet x y
-              let pelletTaken = or $ map isPellet (es1) -- could also just be es
+              let pelletTaken = not $ or $ map isPellet (es1) -- could also just be es
               let isFiring = spaceBar $ keys w
-              let es2 = if isFiring then es1 ++ concat [tryToShoot e | e <- es1] else es1
+              let es2 = if isFiring then concat [tryToShoot e | e <- es1] else es1
               let (es3,worldUpdate) = handle s es2
               let es4 = concat $ map entityTick es3
               let es5 = map (motionTick s) es4
+              let es6 = if pelletTaken then es5 ++ [p] else es5
               return $ worldUpdate $ PelletWorld {
                  space=s,
-                 entities = es5,
+                 entities = es6,
                  score = score w,
                  keys = keys w,
                  time = f + time w

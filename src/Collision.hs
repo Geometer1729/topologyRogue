@@ -1,6 +1,7 @@
 -- Seems to need a little debuging
 module Collision where
 
+import Definitions
 import Graphics.Gloss
 import Space
 import Object

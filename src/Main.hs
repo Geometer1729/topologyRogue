@@ -5,11 +5,9 @@ import           Graphics.Gloss.Interface.IO.Game
 import           Object
 import           Space
 import           Gameplay
+import Definitions
 
-windowWidth :: Float
-windowWidth = 1200
-windowHeight :: Float
-windowHeight = 700
+
 
 main :: IO ()
 main = do

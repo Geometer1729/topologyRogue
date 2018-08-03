@@ -1,33 +1,11 @@
 module Object where
 
+import Definitions
 import           Data.Bits
 import           Graphics.Gloss
 
 
 
-type LocalObj = (Object,Location)
-
-type Object = [Part]
-
-type Part = (Shape,Color)
-
-data Shape = Pol Polygon | Circ Circle
-
-type Polygon = [Point]
-
-type Circle = (Point,Float)
-
-type Location = (Point,Orientation)
-
-type Orientation = (Bool,Float)
-
-testob::Object
-testob =move ((-20,0),(False,0)) [(Pol [(0,-50),(50,0),(0,50)],black) , (Pol [(-5,-30),(70,0),(-5,30)],red) , (Circ ((50,0),25) , blue ) , (Circ ((0,50),10) , cyan )]
-
-
-
-bulletOb::Object
-bulletOb = [(Pol [(0,-10),(10,-8),(20,0),(10,8),(0,10)],black)]
 
 objectToPicture :: Object -> Picture
 objectToPicture o = Pictures $ map (\ (xs,c) -> color c $ drawShape xs) o

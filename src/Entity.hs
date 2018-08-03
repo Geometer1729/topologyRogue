@@ -3,19 +3,13 @@
 
 module Entity where
 
-
+import Definitions
 import Space
 import Object
 import Collision
 import Graphics.Gloss
 
-data Entity = Player MovingObj Int | PlayerProj MovingObj Int | Pellet MovingObj
-data Outcome =  Entity EntityOutcome | World WorldOutcome
-data WorldOutcome =  EndGame | IncScore Int | SetScore Int
-type EntityOutcome = (Who,EntityEffect)
-data Who = First | Second deriving Eq
-data EntityEffect = Kill | Move Motion
-type EffectedEntity = (Entity,[EntityOutcome])
+
 
 getOb::Entity -> MovingObj
 getOb (Player x _) = x

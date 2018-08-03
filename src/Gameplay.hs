@@ -1,5 +1,6 @@
 module Gameplay where
 
+import Definitions
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Object
@@ -13,20 +14,8 @@ isDown :: KeyState -> Bool
 isDown Down = True
 isDown _    = False
 
-pelletTemplate :: Object
-pelletTemplate = [(Circ ((0,0),10),red)]
 
-data World = PelletWorld {
-                    space         :: Space,
-                    entities      :: [Entity],
-                    score         :: Int,
-                    keys          :: Controls,
-                    time          :: Float
-                  } | Pause {
-                    selection     :: Int,
-                    buttons       :: [(String,World)],
-                    backGround    :: World -- world to be rendered as backGround not yet implemented wouldn't be hard I just don't know how to do opacity in Gloss
-                  }
+
 
 testPelletWorld :: Float -> Float -> IO World
 testPelletWorld x y = do
@@ -137,16 +126,9 @@ keyPressMove (EventKey k ks mods f@(x,y)) c = case k of
 keyPressMove _ l = l
 
 
-data Controls = Controls{
-kup :: Bool,
-kdown :: Bool,
-kleft :: Bool,
-kright :: Bool,
-spaceBar :: Bool
-}
 
-allOff::Controls
-allOff = Controls False False False False False
+
+
 
 
 keyToPol:: Controls -> Location -> Motion

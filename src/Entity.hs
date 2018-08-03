@@ -53,12 +53,12 @@ flipWho::Who->Who
 flipWho First = Second
 flipWho Second = First
 
-flipEntityOucome:: EntityOutcome -> EntityOutcome
-flipEntityOucome (x,y) = (flipWho x,y)
+flipEntityOutcome:: EntityOutcome -> EntityOutcome
+flipEntityOutcome (x,y) = (flipWho x,y)
 
 flipOutcome :: Outcome -> Outcome
 flipOutcome (World x) = World x
-flipOutcome (Entity x) = Entity $ flipEntityOucome x
+flipOutcome (Entity x) = Entity $ flipEntityOutcome x
 
 collisionHandle::Entity -> Entity -> [Outcome]
 collisionHandle a b = (halfCollisionHandle a b) ++ (halfCollisionHandle b a)
@@ -92,22 +92,22 @@ isEntity _ = False
 linkOutcomes::Space -> [Entity] -> ([WorldOutcome],[(Entity,[EntityEffect])])
 linkOutcomes s es = (worldEffects,linkedOutcomes)
   where
-    (worldEffects,indexedOutcomes) = arangeOutcomes s es :: ([WorldOutcome],([(Int,EntityEffect)]))
+    (worldEffects,indexedOutcomes) = arrangeOutcomes s es :: ([WorldOutcome],([(Int,EntityEffect)]))
     linkedOutcomes = [(es!!n, [o | (m,o) <- indexedOutcomes , m == n] ) | n <- [0..length es -1]] :: [(Entity,[EntityEffect])]
 
-arangeOutcomes::Space -> [Entity] -> ([WorldOutcome],[(Int,EntityEffect)])
-arangeOutcomes s es = (worldEffects,assigned)
+arrangeOutcomes::Space -> [Entity] -> ([WorldOutcome],[(Int,EntityEffect)])
+arrangeOutcomes s es = (worldEffects,assigned)
   where
     collisionPairs = findCollisions s es :: [(Int,Int)]
     rawOutcomes = [(n,m, collisionHandle (es!!n) (es!!m)) | (n,m) <- collisionPairs ] :: [(Int,Int,[Outcome])]
-    seperated = seperate rawOutcomes
+    separated = separate rawOutcomes
     worldEffects = map getWorld $ filter isWorld $ concat [o | (_,_,o) <- rawOutcomes] ::[WorldOutcome]
-    entityEffects = [ (n,m, getEntity o) | (n,m,o) <- seperated , isEntity o] :: [(Int,Int,EntityOutcome)]
+    entityEffects = [ (n,m, getEntity o) | (n,m,o) <- separated , isEntity o] :: [(Int,Int,EntityOutcome)]
     assigned = map assign entityEffects :: [(Int,EntityEffect)]
 
-seperate::[(a,b,[c])] -> [(a,b,c)]
-seperate [] = []
-seperate ((y1,y2,ys):xs) = [(y1,y2,y) | y <-ys ] ++ seperate xs
+separate::[(a,b,[c])] -> [(a,b,c)]
+separate [] = []
+separate ((y1,y2,ys):xs) = [(y1,y2,y) | y <-ys ] ++ separate xs
 
 assign::(Int,Int,EntityOutcome) -> (Int,EntityEffect)
 assign (n,m,(who,o)) = if who == First then (n,o) else (m,o)

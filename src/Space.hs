@@ -2,7 +2,6 @@ module Space where
 import Definitions
 import           Graphics.Gloss
 import           Object
-import Debug.Trace
 
 
 
@@ -133,7 +132,19 @@ cw::Float ->  Motion
 cw x = ccw (-1*x)
 
 forward::Float -> Location -> Motion
-forward x (_,(f,theta)) = traceShowId $ ((cos theta * x,sin theta * x),0)
+forward x (_,(f,theta)) = ((cos theta * x,sin theta * x),0)
 
 backward::Float -> Location -> Motion
 backward x = forward (-1*x)
+
+spaceNorm::Space->Location->Location->Float
+spaceNorm s loc1 loc2 = minimum [l2 p1 p2 |  (p1,_) <- strongDups s loc1 , (p2,_) <- strongDups s loc2 ]
+
+
+strongDups::Space->Location->[Location]
+strongDups [] l = [l]
+strongDups ((_,lr,_):rs) l = filterDups $ concat $ map (strongDups rs) [l,lr l]
+
+filterDups::(Eq a) => [a] -> [a]
+filterDups [] = []
+filterDups (x:xs) = if elem x xs then filterDups xs else x : filterDups xs

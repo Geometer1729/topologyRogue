@@ -46,7 +46,7 @@ entityTick::Entity -> [Entity]
 entityTick p@Player{cooldown = c} = [p { cooldown = max 0 (c-1)}] -- decriment fire cooldown
 entityTick PlayerProj{life = 0} = [] -- kill if lifespan is 0
 entityTick p@PlayerProj{life = l} = [p { life = max 0 (l-1)}] -- decriment life span
-entityTick e@Enemy{targeted = True , cooldown = 0 ,ob = (_,l,_) } = [e{cooldown = enemyCooldown},EnemyProj (laserOb, app ( forward 50 l)$ l,forward laserSpeed l) laserLife]
+entityTick e@Enemy{targeted = True , cooldown = 0 ,ob = (_,l,_) } = [e{cooldown = enemyCooldown},EnemyProj (laserOb, app ( forward 15 l)$ l,forward laserSpeed l) laserLife]
 entityTick e@Enemy{cooldown = c} = [e { cooldown = max 0 (c-1)}]
 entityTick EnemyProj{life = 0} = [] -- kill if lifespan is 0
 entityTick p@EnemyProj{life = l} = [p { life = max 0 (l-1)}] -- decriment life span

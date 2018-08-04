@@ -7,9 +7,9 @@ data Entity = Player {ob ::MovingObj, cooldown :: Int}
               | PlayerProj {ob ::MovingObj, life :: Int}
               | Pellet { ob :: MovingObj }
               | Enemy { ob :: MovingObj , cooldown :: Int , targeted :: Bool}
-              | EnemyProj { ob :: MovingObj , life :: Int}
+              | EnemyProj { ob :: MovingObj , life :: Int} deriving Show
 data Outcome =  Entity EntityOutcome | World WorldOutcome
-data WorldOutcome =  EndGame | IncScore Int | SetScore Int
+data WorldOutcome =  EndGame | IncScore Int | SetScore Int deriving Show
 type EntityOutcome = (Who,EntityEffect)
 data Who = First | Second deriving Eq
 data EntityEffect = Kill | Move Motion
@@ -19,7 +19,7 @@ type EffectedEntity = (Entity,[EntityOutcome])
 type LocalObj = (Object,Location)
 type Object = [Part]
 type Part = (Shape,Color)
-data Shape = Pol Polygon | Circ Circle
+data Shape = Pol Polygon | Circ Circle deriving Show
 type Polygon = [Point]
 type Circle = (Point,Float)
 type Location = (Point,Orientation)
@@ -63,6 +63,8 @@ data World = PelletWorld {
                     buttons       :: [(String,World)],
                     backGround    :: World -- world to be rendered as backGround not yet implemented wouldn't be hard I just don't know how to do opacity in Gloss
                   }
+instance Show World where
+  show PelletWorld{entities = e, score = s} = concat [show e , "Score" , show s]
 data Controls = Controls{
                   kup :: Bool,
                   kdown :: Bool,

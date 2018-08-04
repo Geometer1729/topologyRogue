@@ -7,7 +7,6 @@ import Object
 import Space
 import System.Random
 import Collision
-import Debug.Trace
 import Entity
 
 isDown :: KeyState -> Bool
@@ -17,10 +16,11 @@ isDown _    = False
 
 
 
-testPelletWorld :: Float -> Float -> IO World
-testPelletWorld x y = do
+testPelletWorld :: Space -> Float -> Float -> IO World
+testPelletWorld s x y = do
               p <- getPellet x y
-              return PelletWorld {space=kh (x/2) (y/2),entities = [Player testMovOb 0, p,Enemy (enemyOb,((300,0),(False,0)),((3,4),0.1)) 10 True ] ,score=0,keys = allOff, time=0}
+              e <- getEnemy s ((0,0),(False,0)) x y
+              return PelletWorld {space= s,entities = [Player testMovOb 0, p ,e] ,score=0,keys = allOff, time=0}
 
 getPellet :: Float -> Float -> IO Entity
 getPellet sx sy = do
@@ -32,21 +32,50 @@ getPellet sx sy = do
               return $ Pellet (pelletTemplate,loc,((0,0),0)) --id means the pelet isn't moving
 
 
+getEnemy :: Space -> Location -> Float -> Float -> IO Entity
+getEnemy s playerLoc sx sy = do
+              loc <- getFilteredRandomLoc sx sy (\l -> spaceNorm s playerLoc l > 200)
+              g <- getStdGen
+              let (dx,g2)      = random g :: (Float,StdGen)
+              let (dy,g3)      = random g2 :: (Float,StdGen)
+              let (dtheta,g4)  = random g3 :: (Float,StdGen)
+              setStdGen g4
+              return $ Enemy (enemyOb,loc, ((10*(dx-0.5),10*(dy-0.5)),0.2*(dtheta-0.5))) 10 True --id means the pelet isn't moving
+
+getFilteredRandomLoc :: Float -> Float -> (Location -> Bool) -> IO Location
+getFilteredRandomLoc sx sy test = do
+  try <- getRandomLoc sx sy
+  if test try then return try else getFilteredRandomLoc sx sy test
+
+getRandomLoc::Float -> Float -> IO Location
+getRandomLoc sx sy = do
+  g <- getStdGen
+  let (x,g2)       = random g  :: (Float,StdGen)
+  let (y,g3)       = random g2 :: (Float,StdGen)
+  let (theta,g4)   = random g3 :: (Float,StdGen)
+  let (fliped,g5)  = random g4 :: (Bool,StdGen)
+  setStdGen g5
+  return ((sx*(x-0.5),sy*(y-0.5)),(fliped ,theta*tau))
+
 --stepWorld
 gameplay :: Float -> Float -> Float -> World -> IO World
 gameplay x y f w@PelletWorld{} = do
               let s = space w
               let es = entities w
               let es1 = [if isPlayer e then adjustPlayerMotion (keys w) e else e | e <- es] -- could potentialy adjust multiple players
+              let (_,pLoc,_) = head $ map ob $ filter isPlayer es1
               p <- getPellet x y
+              e <- getEnemy s pLoc x y
               let pelletTaken = not $ or $ map isPellet (es1) -- could also just be es
+              let enemyKilled = not $ or $ map isEnemy (es1)
               let isFiring = spaceBar $ keys w
               let es2 = if isFiring then concat [tryToShoot e | e <- es1] else es1
               let (es3,worldUpdate) = handle s es2
               let es4 = concat $ map entityTick es3
               let es5 = map (motionTick s) es4
               let es6 = if pelletTaken then es5 ++ [p] else es5
-              nextworld <- worldUpdate $ w {entities = es6 , time = f + time w}
+              let es7 = if enemyKilled then es6 ++ [e] else es6
+              nextworld <- worldUpdate $ w {entities = es7 , time = f + time w}
               return nextworld
 gameplay _ _ f w@(Menu _ _ _) = return w
 
@@ -98,7 +127,7 @@ handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Menu x os bg) = return
 handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Menu x os bg) = return $ Menu (mod (x+1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Menu x os bg) = return $ snd (os !! x)
 handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = do
-  restartWorld <- testPelletWorld windowWidth windowHeight
+  restartWorld <- testPelletWorld (space w) windowWidth windowHeight
   return (Menu 0 [("Resume",w),("Restart",restartWorld),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
 handlePelletWorld k w@PelletWorld{} = do
                         let oldKeys = keys w
@@ -123,7 +152,7 @@ keyPressMove (EventKey k ks mods f@(x,y)) c = case k of
 keyPressMove _ l = l
 
 keyToPol:: Controls -> Location -> Motion
-keyToPol (Controls u d l r _) loc = trace (show (um,dm,lm,rm,foldl add still [um,dm,lm,rm])) $ foldl add still [um,dm,lm,rm]
+keyToPol (Controls u d l r _) loc = foldl add still [um,dm,lm,rm]
   where
     um = if u then forward  playerSpeed loc else still
     dm = if d then backward playerSpeed loc else still
@@ -141,10 +170,11 @@ applyWorld (o:os) w = do
 
 applyWorldOutcome:: WorldOutcome -> World -> IO World
 applyWorldOutcome EndGame  w = do
-  newWorld <- testPelletWorld windowWidth windowHeight
+  newWorld <- testPelletWorld (space w) windowWidth windowHeight
   return $ Menu 0 [("PlayAgain",newWorld)] w
 applyWorldOutcome (SetScore n) (PelletWorld s e _ k t)  = return $ (PelletWorld s e n k t)
 applyWorldOutcome (IncScore n) (PelletWorld s e sc k t) = return $ (PelletWorld s e (sc+n) k t)
+applyWorldOutcome a b = error (show a ++ show b)
 
 handle:: Space -> [Entity] -> ([Entity],World->IO World)
 handle s es = (newEnts, worldFunc)

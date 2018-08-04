@@ -27,9 +27,6 @@ shapeColision p1@(Pol pts1) p2@(Pol pts2) = (or [contains p1 pt | pt <- pts2 ]) 
 shapeColision s@(Circ (c,r)) p@(Pol pts) = or $ [contains p c]++[circleHasLine s l | l <- lines p]
 shapeColision a b = shapeColision b a
 
-l2::Point->Point->Float
-l2 (x1,y1) (x2,y2) = sqrt $ (x1-x2)^2 + (y1-y2)^2
-
 lines::Shape->[(Point,Point)]
 lines (Pol (x1:xs)) = lineHelper (x1:xs) x1
 

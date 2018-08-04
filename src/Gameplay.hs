@@ -126,7 +126,7 @@ handlePelletWorld :: Event -> World -> IO World
 handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Menu x os bg) = return $ Menu (mod (x-1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Menu x os bg) = return $ Menu (mod (x+1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Menu x os bg) = return $ snd (os !! x)
-handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = do
+handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w@PelletWorld{} = do
   restartWorld <- testPelletWorld (space w) windowWidth windowHeight
   return (Menu 0 [("Resume",w),("Restart",restartWorld),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
 handlePelletWorld k w@PelletWorld{} = do
@@ -169,12 +169,13 @@ applyWorld (o:os) w = do
   return fw
 
 applyWorldOutcome:: WorldOutcome -> World -> IO World
+applyWorldOutcome _ m@Menu{} = return m -- prevents world actions being attempted on menu worlds  
 applyWorldOutcome EndGame  w = do
   newWorld <- testPelletWorld (space w) windowWidth windowHeight
   return $ Menu 0 [("PlayAgain",newWorld)] w
 applyWorldOutcome (SetScore n) (PelletWorld s e _ k t)  = return $ (PelletWorld s e n k t)
 applyWorldOutcome (IncScore n) (PelletWorld s e sc k t) = return $ (PelletWorld s e (sc+n) k t)
-applyWorldOutcome a b = error (show a ++ show b)
+
 
 handle:: Space -> [Entity] -> ([Entity],World->IO World)
 handle s es = (newEnts, worldFunc)

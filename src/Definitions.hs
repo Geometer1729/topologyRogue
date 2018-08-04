@@ -65,6 +65,7 @@ data World = PelletWorld {
                   }
 instance Show World where
   show PelletWorld{entities = e, score = s} = concat [show e , "Score" , show s]
+  show Menu{buttons = b} = concat $ map (fst) b
 data Controls = Controls{
                   kup :: Bool,
                   kdown :: Bool,
@@ -98,6 +99,6 @@ playerTurnSpeed = 0.1
 enemyCooldown::Int
 enemyCooldown = 10 -- perfectly balanced as all things should be
 laserSpeed :: Float
-laserSpeed = 40
+laserSpeed = 30
 laserLife :: Int
 laserLife = 15

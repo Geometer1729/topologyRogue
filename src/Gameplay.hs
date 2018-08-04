@@ -97,7 +97,9 @@ handlePelletWorld :: Event -> World -> IO World
 handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Menu x os bg) = return $ Menu (mod (x-1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Menu x os bg) = return $ Menu (mod (x+1) (length os)) os bg
 handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Menu x os bg) = return $ snd (os !! x)
-handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = return (Menu 0 [("Resume",w),("Save",w),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
+handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w = do
+  restartWorld <- testPelletWorld windowWidth windowHeight
+  return (Menu 0 [("Resume",w),("Restart",restartWorld),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
 handlePelletWorld k w@PelletWorld{} = do
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys

@@ -32,13 +32,14 @@ isEnemyProj e@EnemyProj{} = True
 isEnemyProj _ = False
 
 halfCollisionHandle:: Entity -> Entity -> [Outcome]
-halfCollisionHandle e@Player{}     f@PlayerProj{} = [ Entity (Second,Kill)]
-halfCollisionHandle e@Player{}     f@Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle e@PlayerProj{} f@Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle e@PlayerProj{} f@PlayerProj{} = [Entity (First,Kill)]  -- still kills both
-halfCollisionHandle e@Player{}     f@EnemyProj{}  = [Entity (First,Kill), World EndGame]
-halfCollisionHandle e@PlayerProj{} f@Enemy{}      = [Entity (Second,Kill), World $ IncScore 10]
-halfCollisionHandle e@EnemyProj{}  f@Pellet{}     = [Entity (Second,Kill), World $ IncScore (-1)]
+halfCollisionHandle Player{}     PlayerProj{} = [Entity (Second,Kill)]
+halfCollisionHandle Player{}     Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
+halfCollisionHandle PlayerProj{} Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
+halfCollisionHandle PlayerProj{} PlayerProj{} = [Entity (First,Kill)]  -- still kills both
+halfCollisionHandle Player{}     EnemyProj{}  = [Entity (First,Kill), World EndGame]
+halfCollisionHandle PlayerProj{} Enemy{}      = [Entity (Second,Kill), World $ IncScore 10]
+halfCollisionHandle EnemyProj{}  Pellet{}     = [Entity (Second,Kill), World $ IncScore (-1)]
+halfCollisionHandle Player{}     Enemy{}      = [Entity (First,Kill) , World EndGame]
 halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
 
 entityTick::Entity -> [Entity]

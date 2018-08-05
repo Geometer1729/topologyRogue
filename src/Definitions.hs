@@ -7,7 +7,8 @@ data Entity = Player {ob ::MovingObj, cooldown :: Int}
               | PlayerProj {ob ::MovingObj, life :: Int}
               | Pellet { ob :: MovingObj }
               | Enemy { ob :: MovingObj , cooldown :: Int , targeted :: Bool}
-              | EnemyProj { ob :: MovingObj , life :: Int} deriving Show
+              | EnemyProj { ob :: MovingObj , life :: Int}
+              | Inert {ob :: MovingObj} deriving Show
 data Outcome =  Entity EntityOutcome | World WorldOutcome
 data WorldOutcome =  EndGame | IncScore Int | SetScore Int deriving Show
 type EntityOutcome = (Who,EntityEffect)
@@ -25,15 +26,20 @@ type Circle = (Point,Float)
 type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
 
+metal::Color
+metal = makeColor 0.2 0.2 0.2 1
+
 --Object objects
 testob::Object
-testob =[(Pol [(-20,-50),(30,0),(-20,50)],black) , (Pol [(-25,-30),(50,0),(-25,30)],red) , (Circ ((30,0),25) , blue ) , (Circ ((-20,50),10) , cyan )]
+testob =[(Pol [(-20,-50),(30,0),(-20,50)],metal) , (Pol [(-25,-30),(50,0),(-25,30)],red) ]
 bulletOb::Object
-bulletOb = [(Pol [(0,-10),(10,-8),(20,0),(10,8),(0,10)],black)]
+bulletOb = [(Pol [(0,-10),(10,-8),(20,0),(10,8),(0,10)],metal)]
 enemyOb::Object
-enemyOb = [(Pol [(-20,-20),(-20,20),(20,20),(20,-20)], black)]
+enemyOb = [(Pol [(-20,-20),(-20,20),(20,20),(20,-20)], metal)]
 laserOb::Object
 laserOb = [(Pol [(-20,-2),(-20,2),(20,2),(20,-2)], red)]
+starOb ::Object
+starOb = [(Circ ((0,0),3) , white) ]
 
 --Space types
 type Motion = (Point,Float)

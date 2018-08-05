@@ -21,7 +21,8 @@ testPelletWorld :: Space -> Float -> Float -> IO World
 testPelletWorld s x y = do
               p <- getPellet x y
               e <- getEnemy s ((0,0),(False,0)) x y
-              return PelletWorld {space= s,entities = [Player testMovOb 0, p ,e] ,score=0,keys = allOff, time=0}
+              stars <- makeStars 50 x y
+              return PelletWorld {space= s,entities = stars ++ [Player testMovOb 0, p ,e],score=0,keys = allOff, time=0}
 
 getPellet :: Float -> Float -> IO Entity
 getPellet sx sy = do
@@ -58,6 +59,13 @@ getRandomLoc sx sy = do
   setStdGen g5
   return ((sx*(x-0.5),sy*(y-0.5)),(fliped ,theta*tau))
 
+makeStars:: Int -> Float -> Float -> IO [Entity]
+makeStars 0 _ _ = return []
+makeStars n sx sy = do
+  loc <- getRandomLoc sx sy
+  more <- makeStars (n-1) sx sy
+  return $ (Inert (starOb,loc,still)) : more
+
 --stepWorld
 gameplay :: Float -> Float -> Float -> World -> IO World
 gameplay x y f w@PelletWorld{} = do
@@ -75,7 +83,7 @@ gameplay x y f w@PelletWorld{} = do
               let es4 = concat $ map entityTick es3
               let es5 = map (motionTick s) es4
               let es6 = if pelletTaken then es5 ++ [p] else es5
-              let es7 = if enemyKilled then es6 ++ [] else es6
+              let es7 = if enemyKilled then es6 ++ [e] else es6
               let (pv,_) = pLoc
               let es8 = map (entityShift (recenter pv,0)) es7
               nextworld <- worldUpdate $ w {entities = es8 , time = f + time w}
@@ -114,7 +122,7 @@ renderPelletWorld (Menu s os bg) = do
 
 renderMenuOption::(Bool,Float,String)->Picture
 renderMenuOption (selected,height,text) = Pictures [box,translate] where
-    col = if selected then red else black ::Color
+    col = if selected then red else white ::Color
     pic = color col $ Text text :: Picture
     scaled = Scale 0.2 0.2 pic :: Picture
     translate = Translate (-75) height scaled:: Picture
@@ -124,14 +132,16 @@ renderMenuOption (selected,height,text) = Pictures [box,translate] where
 renderScore :: World -> Picture
 renderScore p = let s = score p
                     pic = Text ("Score: " ++ (show s))
-                    scaled = Scale 0.2 0.2 pic
+                    colored = color white pic
+                    scaled = Scale 0.2 0.2 colored
                     translate = Translate (-75) 75 scaled
                 in translate
 --if I do this one more time, I'm making a renderText function
 renderTimer :: World -> Picture
 renderTimer w = let t = time w
                     pic = Text ("Time: " ++ (show t))
-                    scaled = Scale 0.2 0.2 pic
+                    colored = color white pic
+                    scaled = Scale 0.2 0.2 colored
                     translate = Translate (-75) 125 scaled
                 in translate
 

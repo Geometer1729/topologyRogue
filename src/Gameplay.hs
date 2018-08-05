@@ -8,6 +8,7 @@ import Space
 import System.Random
 import Collision
 import Entity
+import Debug.Trace
 
 isDown :: KeyState -> Bool
 isDown Down = True
@@ -68,16 +69,29 @@ gameplay x y f w@PelletWorld{} = do
               e <- getEnemy s pLoc x y
               let pelletTaken = not $ or $ map isPellet (es1) -- could also just be es
               let enemyKilled = not $ or $ map isEnemy (es1)
-              let isFiring = spaceBar $ keys w
+              let isFiring = fireing $ keys w
               let es2 = if isFiring then concat [tryToShoot e | e <- es1] else es1
               let (es3,worldUpdate) = handle s es2
               let es4 = concat $ map entityTick es3
               let es5 = map (motionTick s) es4
               let es6 = if pelletTaken then es5 ++ [p] else es5
-              let es7 = if enemyKilled then es6 ++ [e] else es6
-              nextworld <- worldUpdate $ w {entities = es7 , time = f + time w}
+              let es7 = if enemyKilled then es6 ++ [] else es6
+              let (pv,_) = pLoc
+              let es8 = map (entityShift (recenter pv,0)) es7
+              nextworld <- worldUpdate $ w {entities = es8 , time = f + time w}
               return nextworld
 gameplay _ _ f w@(Menu _ _ _) = return w
+
+recenter::Point -> Point
+recenter p@(x,y)
+  | len <= 10 = (x,y)
+  | len > 10 = ptSub (ptScale 50 unit) p
+  where
+    len = sqrt $ x^2 + y^2
+    unit = ptScale (1/len) p
+
+ptScale::Float -> Point -> Point
+ptScale r (x,y) = (r*x,r*y)
 
 
 adjustPlayerMotion:: Controls -> Entity -> Entity
@@ -133,31 +147,39 @@ handlePelletWorld k w@PelletWorld{} = do
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
                         return w { keys = newKeys }
-handlePelletWorld x w = do
-  --print x --uncoment for debug
-  return w -- do nothing if key stroke not delt with above
+handlePelletWorld x w = return w
 
 
 
 keyPressMove :: Event -> Controls -> Controls
-keyPressMove (EventKey k ks mods f@(x,y)) c = case k of
-                                                    (SpecialKey KeyUp)    -> c {kup    = kd}
-                                                    (SpecialKey KeyDown)  -> c {kdown  = kd}
-                                                    (SpecialKey KeyLeft)  -> c {kleft  = kd}
-                                                    (SpecialKey KeyRight) -> c {kright = kd}
-                                                    (SpecialKey KeySpace) -> c {spaceBar = kd}
+keyPressMove (EventKey k ks mods p) c = case k of
+                                                    (Char 'w')    -> c {kup  = kd,cursor = p}
+                                                    (Char 's')  -> c {kdown  = kd,cursor = p}
+                                                    (Char 'a')  -> c {kleft  = kd,cursor = p}
+                                                    (Char 'd') -> c {kright  = kd,cursor = p}
+                                                    (MouseButton LeftButton) -> c {fireing = kd , cursor = p}
                                                     _ -> c
                                                     where
                                                   kd = isDown ks
-keyPressMove _ l = l
+keyPressMove (EventMotion p) l = l{cursor = p}
+keyPressMove x w = traceShow x w
 
 keyToPol:: Controls -> Location -> Motion
-keyToPol (Controls u d l r _) loc = foldl add still [um,dm,lm,rm]
+keyToPol (Controls u d l r _ c) loc@(pv,(fliped,theta)) = foldl add still [um,dm,lm,rm,rot]
   where
     um = if u then forward  playerSpeed loc else still
     dm = if d then backward playerSpeed loc else still
-    lm = if l then ccw playerTurnSpeed else still
-    rm = if r then cw playerTurnSpeed  else still
+    lm = if l then left     playerSpeed loc else still
+    rm = if r then right    playerSpeed loc else still
+    rot = if fliped then cw (cursorTheta - theta) else ccw (cursorTheta - theta)
+    cursorTheta = getTheta $ ptSub c pv
+
+getTheta::Point -> Float
+getTheta (x,y)
+  | x == 0 = if y >0 then tau/4 else 3*tau/4
+  | x > 0  = atan (y/x)
+  | x < 0  = tau/2 + atan (y/x)
+
 
 -- entity code that depends on world type
 
@@ -169,7 +191,7 @@ applyWorld (o:os) w = do
   return fw
 
 applyWorldOutcome:: WorldOutcome -> World -> IO World
-applyWorldOutcome _ m@Menu{} = return m -- prevents world actions being attempted on menu worlds  
+applyWorldOutcome _ m@Menu{} = return m -- prevents world actions being attempted on menu worlds
 applyWorldOutcome EndGame  w = do
   newWorld <- testPelletWorld (space w) windowWidth windowHeight
   return $ Menu 0 [("PlayAgain",newWorld)] w

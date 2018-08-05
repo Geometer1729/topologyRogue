@@ -137,6 +137,15 @@ forward x (_,(f,theta)) = ((cos theta * x,sin theta * x),0)
 backward::Float -> Location -> Motion
 backward x = forward (-1*x)
 
+right::Float -> Location -> Motion
+right x (_,(f,theta)) = ((cos thetaR * x,sin thetaR * x),0)
+  where
+    thetaR = theta + tau/4
+
+left:: Float -> Location -> Motion
+left x = right (-1*x)
+
+
 spaceNorm::Space->Location->Location->Float
 spaceNorm s loc1 loc2 = minimum [l2 p1 p2 |  (p1,_) <- strongDups s loc1 , (p2,_) <- strongDups s loc2 ]
 

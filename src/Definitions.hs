@@ -71,11 +71,12 @@ data Controls = Controls{
                   kdown :: Bool,
                   kleft :: Bool,
                   kright :: Bool,
-                  spaceBar :: Bool
+                  fireing :: Bool,
+                  cursor :: Point
                   }
 --Gameplay objects
 allOff::Controls
-allOff = Controls False False False False False
+allOff = Controls False False False False False (10,0)
 pelletTemplate :: Object
 pelletTemplate = [(Circ ((0,0),10),red)]
 

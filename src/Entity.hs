@@ -139,7 +139,13 @@ applyEntityEffects (e,(f:fs)) =  concat [ applyEntityEffects (r,fs) | r <- (appl
 
 applyEntityEffect::EntityEffect -> Entity -> [Entity] -- returning a list allows killing or firing
 applyEntityEffect Kill _ = []
-applyEntityEffect (Move m) e = [e { ob = setMot m $ ob e}]
+applyEntityEffect (Move m) e = [entityShift m e]
+
+entityShift::Motion -> Entity -> Entity
+entityShift mo e = e { ob = moved}
+  where
+    (o,l,m) = ob e
+    moved = (o,app mo l,m)
 
 motionTick::Space -> Entity -> Entity
 motionTick s e = e {ob = moved}

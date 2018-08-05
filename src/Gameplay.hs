@@ -210,8 +210,10 @@ applyWorldOutcome (IncScore n) (PelletWorld s e sc k t) = return $ (PelletWorld 
 
 
 handle:: Space -> [Entity] -> ([Entity],World->IO World)
-handle s es = (newEnts, worldFunc)
+handle s es = (inerts++newEnts, worldFunc)
   where
-    (worldOuts,witheffects) = linkOutcomes s es
+    inerts = filter isInert es
+    nonInerts = filter (not . isInert) es
+    (worldOuts,witheffects) = linkOutcomes s nonInerts
     newEnts = concat $ map applyEntityEffects witheffects :: [Entity]
     worldFunc = applyWorld worldOuts

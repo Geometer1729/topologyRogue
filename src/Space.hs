@@ -140,7 +140,7 @@ backward x = forward (-1*x)
 right::Float -> Location -> Motion
 right x (_,(f,theta)) = ((cos thetaR * x,sin thetaR * x),0)
   where
-    thetaR = theta + tau/4
+    thetaR = theta - tau/4
 
 left:: Float -> Location -> Motion
 left x = right (-1*x)

@@ -12,24 +12,28 @@ import Graphics.Gloss
 -- non general code
 
 isPlayer::Entity -> Bool
-isPlayer e@Player{} = True
+isPlayer Player{} = True
 isPlayer _ = False
 
 isPlayerProj::Entity -> Bool
-isPlayerProj p@PlayerProj{} = True
+isPlayerProj PlayerProj{} = True
 isPlayerProj _ = False
 
 isPellet::Entity -> Bool
-isPellet e@Pellet{} = True
+isPellet Pellet{} = True
 isPellet _ = False
 
 isEnemy::Entity -> Bool
-isEnemy e@Enemy{} = True
+isEnemy Enemy{} = True
 isEnemy _ = False
 
 isEnemyProj::Entity -> Bool
-isEnemyProj e@EnemyProj{} = True
+isEnemyProj EnemyProj{} = True
 isEnemyProj _ = False
+
+isInert::Entity -> Bool
+isInert Inert{} = True
+isInert _ = False
 
 halfCollisionHandle:: Entity -> Entity -> [Outcome]
 halfCollisionHandle Player{}     PlayerProj{} = [Entity (Second,Kill)]

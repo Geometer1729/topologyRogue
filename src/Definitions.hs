@@ -3,17 +3,17 @@ module Definitions where
 import Graphics.Gloss
 
 --Entity types
-data Entity = Player {ob ::MovingObj, cooldown :: Int}
-              | PlayerProj {ob ::MovingObj, life :: Int}
-              | Pellet { ob :: MovingObj }
-              | Enemy { ob :: MovingObj , cooldown :: Int , targeted :: Bool}
-              | EnemyProj { ob :: MovingObj , life :: Int}
-              | Inert {ob :: MovingObj} deriving Show
+data Entity = Player       {ob :: MovingObj, hp :: Int , cooldown :: Int}
+              | PlayerProj {ob :: MovingObj, life :: Int}
+              | Enemy      {ob :: MovingObj, hp :: Int , cooldown :: Int , targeted :: Bool}
+              | EnemyProj  {ob :: MovingObj, life :: Int}
+              | Pellet     {ob :: MovingObj}
+              | Inert      {ob :: MovingObj} deriving Show
 data Outcome =  Entity EntityOutcome | World WorldOutcome
 data WorldOutcome =  EndGame | IncScore Int | SetScore Int deriving Show
 type EntityOutcome = (Who,EntityEffect)
 data Who = First | Second deriving Eq
-data EntityEffect = Kill | Move Motion
+data EntityEffect = Damage Int | Kill | Move Motion
 type EffectedEntity = (Entity,[EntityOutcome])
 
 --Object types
@@ -25,9 +25,15 @@ type Polygon = [Point]
 type Circle = (Point,Float)
 type Location = (Point,Orientation)
 type Orientation = (Bool,Float)
+type EntityGenRule = ([Float],Entity,Entity -> Bool ,Location->Bool,MotionRange) -- [ [probability of spawn for each number], count filter, what to spawn, location filter) ]
+data MotionRange = None | Max Float Float -- displacement rotation
 
 metal::Color
 metal = makeColor 0.2 0.2 0.2 1
+centered::Location
+centered = ((0,0),(False,0))
+still::Motion
+still = ((0,0),0)
 
 --Object objects
 testob::Object
@@ -61,6 +67,7 @@ localBullet = (bulletOb,((0,0),(False,0::Float)))
 data World = PelletWorld {
                     space         :: Space,
                     entities      :: [Entity],
+                    spawnRules    :: [EntityGenRule],
                     score         :: Int,
                     keys          :: Controls,
                     time          :: Float

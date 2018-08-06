@@ -5,8 +5,7 @@ import           Object
 
 
 
-centered::Location
-centered = ((0,0),(False,0))
+
 
 vecToLoc::Point->Location
 vecToLoc x = (x,(False,0))
@@ -118,9 +117,6 @@ app ((dx,dy),w) ((x,y),(f,t)) = ((x+dx,y+dy),(f,t+maybeNeg f w))
 
 add:: Motion -> Motion -> Motion
 add ((x1,y1),w1) ((x2,y2),w2) = ((x1+x2,y1+y2),w1+w2)
-
-still::Motion
-still = ((0,0),0)
 
 setMot::Motion -> MovingObj -> MovingObj
 setMot m (o,l,_) = (o,l,m)

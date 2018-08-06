@@ -40,7 +40,7 @@ halfCollisionHandle Player{}     PlayerProj{} = [Entity (Second,Kill)]
 halfCollisionHandle Player{}     Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
 halfCollisionHandle PlayerProj{} Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
 halfCollisionHandle PlayerProj{} PlayerProj{} = [Entity (First,Kill)]  -- still kills both
-halfCollisionHandle Player{}     EnemyProj{}  = [Entity (First,Kill), World EndGame]
+halfCollisionHandle Player{}     EnemyProj{}  = [Entity (First,Damage 1), Entity (Second,Kill) , World $ IncScore (-1)]
 halfCollisionHandle PlayerProj{} Enemy{}      = [Entity (Second,Kill), World $ IncScore 10]
 halfCollisionHandle EnemyProj{}  Pellet{}     = [Entity (Second,Kill), World $ IncScore (-1)]
 halfCollisionHandle Player{}     Enemy{}      = [Entity (First,Kill) , World EndGame]
@@ -144,6 +144,9 @@ applyEntityEffects (e,(f:fs)) =  concat [ applyEntityEffects (r,fs) | r <- (appl
 applyEntityEffect::EntityEffect -> Entity -> [Entity] -- returning a list allows killing or firing
 applyEntityEffect Kill _ = []
 applyEntityEffect (Move m) e = [entityShift m e]
+applyEntityEffect (Damage n) e
+  | hp e > n = [e{hp = hp e - n}]
+  | otherwise = []
 
 entityShift::Motion -> Entity -> Entity
 entityShift mo e = e { ob = moved}

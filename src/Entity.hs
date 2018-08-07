@@ -2,7 +2,6 @@
 {-#LANGUAGE FlexibleInstances #-}
 
 module Entity where
-
 import Definitions
 import Space
 import Object
@@ -36,14 +35,14 @@ isInert Inert{} = True
 isInert _ = False
 
 halfCollisionHandle:: Entity -> Entity -> [Outcome]
-halfCollisionHandle Player{}     PlayerProj{} = [Entity (Second,Kill)]
-halfCollisionHandle Player{}     Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle PlayerProj{} Pellet{}     = [Entity (Second,Kill), World $ IncScore 1]
-halfCollisionHandle PlayerProj{} PlayerProj{} = [Entity (First,Kill)]  -- still kills both
-halfCollisionHandle Player{}     EnemyProj{}  = [Entity (First,Damage 1), Entity (Second,Kill) , World $ IncScore (-1)]
-halfCollisionHandle PlayerProj{} Enemy{}      = [Entity (Second,Kill), World $ IncScore 10]
-halfCollisionHandle EnemyProj{}  Pellet{}     = [Entity (Second,Kill), World $ IncScore (-1)]
-halfCollisionHandle Player{}     Enemy{}      = [Entity (First,Kill) , World EndGame]
+halfCollisionHandle Player{}     PlayerProj{} = [killR]
+halfCollisionHandle Player{}     Pellet{}     = [killR, addPoint 1]
+halfCollisionHandle PlayerProj{} Pellet{}     = [killR, addPoint 1]
+halfCollisionHandle PlayerProj{} PlayerProj{} = [killL]  -- still kills both
+halfCollisionHandle Player{}     EnemyProj{}  = [damL 1, killR , addPoint (-1)]
+halfCollisionHandle PlayerProj{} Enemy{}      = [killR, addPoint 10]
+halfCollisionHandle EnemyProj{}  Pellet{}     = [killR, addPoint (-1)]
+halfCollisionHandle Player{}     Enemy{}      = [killL , gameOver]
 halfCollisionHandle _ _ = [] -- unspecified behavior do nothing
 
 entityTick::Entity -> [Entity]

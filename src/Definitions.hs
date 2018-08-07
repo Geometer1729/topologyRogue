@@ -95,9 +95,9 @@ pelletTemplate = [(Circ ((0,0),10),red)]
 
 --game Config
 windowWidth :: Float
-windowWidth = 1200
+windowWidth = 1600
 windowHeight :: Float
-windowHeight = 700
+windowHeight = 900
 fireCoolDown:: Int
 fireCoolDown = 10
 bulletSpeed:: Float
@@ -116,3 +116,17 @@ laserSpeed :: Float
 laserSpeed = 30
 laserLife :: Int
 laserLife = 15
+
+killL::Outcome
+killL = Entity (First,Kill)
+killR::Outcome
+killR = Entity (Second,Kill)
+gameOver::Outcome
+gameOver = World EndGame
+-- technicaly functions but they are only used as shorthand
+damL::Int -> Outcome
+damL n = Entity (First,Damage n)
+damR :: Int -> Outcome
+damR n = Entity (Second,Damage n)
+addPoint::Int->Outcome
+addPoint n = World $ IncScore n

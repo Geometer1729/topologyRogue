@@ -3,6 +3,8 @@ module Gameplay where
 import Definitions
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Interface.Environment
+import Graphics.Gloss.Data.ViewPort
 import Object
 import Space
 import System.Random
@@ -78,8 +80,11 @@ adjustPlayerMotion keys p = p { ob = ( setMot (keyToPol keys l) $ o) }
 --render
 renderPelletWorld :: World -> IO Picture
 renderPelletWorld w@PelletWorld{} = do
+                    (screenX,screenY) <- getScreenSize
+                    let scale = max (fromIntegral screenX / windowWidth) (fromIntegral screenY / windowHeight)
+                    let newPort = viewPortInit{viewPortScale=scale}
                     let entPic = map (entityDraw (space w)) (entities w)
-                    return $ Pictures $ entPic ++ [renderScore w, renderTimer w]
+                    return $ applyViewPortToPicture newPort $ Pictures $ entPic ++ [renderScore w, renderTimer w, renderHp w]
 renderPelletWorld (Menu s os bg) = do
                     bgp <- renderPelletWorld bg
                     let oc = length os
@@ -100,18 +105,28 @@ renderMenuOption (selected,height,text) = Pictures [box,translate] where
 renderScore :: World -> Picture
 renderScore p = let s = score p
                     pic = Text ("Score: " ++ (show s))
-                    colored = color white pic
-                    scaled = Scale 0.2 0.2 colored
-                    translate = Translate (-75) 75 scaled
+                    colored = color red pic
+                    scaled = Scale 0.15 0.15 colored
+                    translate = Translate (-windowWidth/2) (-windowHeight/2+40) scaled
                 in translate
 --if I do this one more time, I'm making a renderText function
 renderTimer :: World -> Picture
 renderTimer w = let t = time w
                     pic = Text ("Time: " ++ (show t))
-                    colored = color white pic
-                    scaled = Scale 0.2 0.2 colored
-                    translate = Translate (-75) 125 scaled
+                    colored = color red pic
+                    scaled = Scale 0.15 0.15 colored
+                    translate = Translate (-windowWidth/2) (-windowHeight/2) scaled
                 in translate
+renderHp :: World -> Picture
+renderHp w = let    t = time w
+                    players = filter isPlayer $ entities w
+                    h = if players == [] then 0 else hp $ head players
+                    pic = Text ("HP: " ++ (show h))
+                    colored = color red pic
+                    scaled = Scale 0.15 0.15 colored
+                    translate = Translate (-windowWidth/2) (-windowHeight/2+20) scaled
+                in translate
+
 
 --input
 handlePelletWorld :: Event -> World -> IO World
@@ -122,6 +137,7 @@ handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w@PelletWorld{} = do
   restartWorld <- testPelletWorld (space w) windowWidth windowHeight
   return (Menu 0 [("Resume",w),("Restart",restartWorld),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
 handlePelletWorld k w@PelletWorld{} = do
+                        print k -- debug code
                         let oldKeys = keys w
                         let newKeys = keyPressMove k oldKeys
                         return w { keys = newKeys }

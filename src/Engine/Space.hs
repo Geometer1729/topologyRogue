@@ -1,4 +1,4 @@
-module Space where
+module Engine.Space where
 import Engine.Definitions
 import Graphics.Gloss
 import Engine.Object

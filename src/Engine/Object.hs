@@ -1,4 +1,4 @@
-module Object where
+module Engine.Object where
 
 import Engine.Definitions
 import Data.Bits

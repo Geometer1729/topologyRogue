@@ -1,6 +1,6 @@
 module Game.Gameplay where
 
-import Entity.Definitions
+import Engine.Definitions
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.Environment

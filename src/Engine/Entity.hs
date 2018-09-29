@@ -1,11 +1,11 @@
 {-#LANGUAGE TypeSynonymInstances #-}
 {-#LANGUAGE FlexibleInstances #-}
 
-module Entity where
-import Definitions
-import Space
-import Object
-import Collision
+module Engine.Entity where
+import Engine.Definitions
+import Engine.Space
+import Engine.Object
+import Engine.Collision
 import Graphics.Gloss
 
 -- non general code

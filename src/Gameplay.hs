@@ -24,7 +24,7 @@ testPelletWorld :: Space -> Float -> Float -> IO World
 testPelletWorld s x y = do
               stars <- makeStars 50 x y
               let sr = [([1],Pellet (pelletTemplate,centered,still) , isPellet, const True, None),([1],Enemy  (enemyOb,centered,still) 10 10 True , isEnemy, const True, Max 10 0.1)]
-              return PelletWorld {space= s,entities = stars ++ [Player testMovOb 10 0],spawnRules = sr ,score=0,keys = allOff, time=0}
+              return PelletWorld {space= s,entities = stars ++ [Player testMovOb 10 0],spawnRules = sr ,score=0,keys = allOff, time=0, windowSize= (round windowWidth,round windowHeight)}
 
 
 makeStars:: Int -> Float -> Float -> IO [Entity]
@@ -37,25 +37,27 @@ makeStars n sx sy = do
 --stepWorld
 gameplay :: Float -> Float -> Float -> World -> IO World
 gameplay x y f w@PelletWorld{} = do
-            let es = entities w
-            let playerAlive = or $ map isPlayer es
-            if playerAlive then do
-              let s = space w
-              let es1 = [if isPlayer e then adjustPlayerMotion (keys w) e else e | e <- es] -- adjust player motion
-              let (_,pLoc,_) = head $ map ob $ filter isPlayer es1 -- get player location
-              let isFiring = fireing $ keys w
-              let es2 = if isFiring then concat [tryToShoot e | e <- es1] else es1 -- create bullet if isFiring and cooldown is 0
-              let (es3,worldUpdate) = handle s es2 -- process collision events
-              let es4 = concat $ map entityTick es3 -- process autonomous entity actions (ie. enemy shooting)
-              let es5 = map (motionTick s) es4 -- process motion
-              newEnts <- genSeveralEnts s es5 (spawnRules w)
-              let es6 = es5++ newEnts
-              let (pv,_) = pLoc -- get player location vector
-              let es7 = map (entityShift (recenter pv,0)) es6 -- adjust map to keep player somewhat centered
-              worldUpdate $ w {entities = es7 , time = f + time w} -- set new entities and time then apply world effect actions
-            else -- if player is dead just end the game
-              applyWorldOutcome EndGame w
-gameplay _ _ f w@(Menu _ _ _) = return w
+	putStr "gamePlay :"
+	print $ windowSize w
+	let es = entities w
+	let playerAlive = or $ map isPlayer es
+	if playerAlive then do
+		let s = space w
+		let es1 = [if isPlayer e then adjustPlayerMotion (keys w) e else e | e <- es] -- adjust player motion
+		let (_,pLoc,_) = head $ map ob $ filter isPlayer es1 -- get player location
+		let isFiring = fireing $ keys w
+		let es2 = if isFiring then concat [tryToShoot e | e <- es1] else es1 -- create bullet if isFiring and cooldown is 0
+		let (es3,worldUpdate) = handle s es2 -- process collision events
+		let es4 = concat $ map entityTick es3 -- process autonomous entity actions (ie. enemy shooting)
+		let (pv,_) = pLoc -- get player location vector
+		let es5 = map (entityShift (recenter pv,0)) es4 -- adjust map to keep player somewhat centered
+		let es6 = map (motionTick s) es5 -- process motion
+		newEnts <- genSeveralEnts s es5 (spawnRules w)
+		let es7 = es6++ newEnts
+		worldUpdate $ w {entities = es7 , time = f + time w} -- set new entities and time then apply world effect actions
+	else -- if player is dead just end the game
+		applyWorldOutcome EndGame w
+gameplay _ _ f w@Menu{} = return w
 
 
 
@@ -80,12 +82,15 @@ adjustPlayerMotion keys p = p { ob = ( setMot (keyToPol keys l) $ o) }
 --render
 renderPelletWorld :: World -> IO Picture
 renderPelletWorld w@PelletWorld{} = do
-                    (screenX,screenY) <- getScreenSize
-                    let scale = max (fromIntegral screenX / windowWidth) (fromIntegral screenY / windowHeight)
-                    let newPort = viewPortInit{viewPortScale=scale}
-                    let entPic = map (entityDraw (space w)) (entities w)
-                    return $ applyViewPortToPicture newPort $ Pictures $ entPic ++ [renderScore w, renderTimer w, renderHp w]
-renderPelletWorld (Menu s os bg) = do
+  print "render info:"
+  print (windowSize w)
+  let entPic = map (entityDraw (space w)) (entities w)
+  let (screenX,screenY) = windowSize w
+  let scale = max (fromIntegral screenX / windowWidth) (fromIntegral screenY / windowHeight)
+  let newPort = viewPortInit{viewPortScale=scale}
+  let entPic = map (entityDraw (space w)) (entities w)
+  return $ applyViewPortToPicture newPort $ Pictures $ entPic ++ [renderScore w, renderTimer w, renderHp w]
+renderPelletWorld (Menu s os bg _) = do
                     bgp <- renderPelletWorld bg
                     let oc = length os
                     let ops = [ (i == s,fromIntegral (25*oc-50*i) :: Float ,fst (os!!i)) | i <- [0..(oc -1)] ]
@@ -120,7 +125,7 @@ renderTimer w = let t = time w
 renderHp :: World -> Picture
 renderHp w = let    t = time w
                     players = filter isPlayer $ entities w
-                    h = if players == [] then 0 else hp $ head players
+                    h = if length players == 0 then 0 else hp $ head players
                     pic = Text ("HP: " ++ (show h))
                     colored = color red pic
                     scaled = Scale 0.15 0.15 colored
@@ -130,12 +135,16 @@ renderHp w = let    t = time w
 
 --input
 handlePelletWorld :: Event -> World -> IO World
-handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Menu x os bg) = return $ Menu (mod (x-1) (length os)) os bg
-handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Menu x os bg) = return $ Menu (mod (x+1) (length os)) os bg
-handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Menu x os bg) = return $ snd (os !! x)
+handlePelletWorld (EventKey (SpecialKey KeyUp) Down _ _) (Menu x os bg s) = return $ Menu (mod (x-1) (length os)) os bg s
+handlePelletWorld (EventKey (SpecialKey KeyDown) Down _ _) (Menu x os bg s) = return $ Menu (mod (x+1) (length os)) os bg s
+handlePelletWorld (EventKey (SpecialKey KeyEnter) Down _ _) (Menu x os bg s) = return $ snd (os !! x)
 handlePelletWorld (EventKey (SpecialKey KeyEsc) Down _ _) w@PelletWorld{} = do
   restartWorld <- testPelletWorld (space w) windowWidth windowHeight
-  return (Menu 0 [("Resume",w),("Restart",restartWorld),("Quit",error "")] w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
+  return $ Menu 0 [("Resume",w),("Restart",restartWorld),("Quit",error "")] w (windowSize w) -- save resumes game this will be cooler when we have a XML system and can actualy save/load
+handlePelletWorld (EventResize (x,y)) w = do
+	putStr "event :"
+	print $ windowSize w
+	return w{windowSize=(x,y)}
 handlePelletWorld k w@PelletWorld{} = do
                         print k -- debug code
                         let oldKeys = keys w
@@ -147,14 +156,14 @@ handlePelletWorld x w = return w
 
 keyPressMove :: Event -> Controls -> Controls
 keyPressMove (EventKey k ks mods p) c = case k of
-                                                    (Char 'w')    -> c {kup  = kd,cursor = p}
-                                                    (Char 's')  -> c {kdown  = kd,cursor = p}
-                                                    (Char 'a')  -> c {kleft  = kd,cursor = p}
-                                                    (Char 'd') -> c {kright  = kd,cursor = p}
-                                                    (MouseButton LeftButton) -> c {fireing = kd , cursor = p}
-                                                    _ -> c
-                                                    where
-                                                  kd = isDown ks
+  (Char 'w')    -> c {kup  = kd,cursor = p}
+  (Char 's')  -> c {kdown  = kd,cursor = p}
+  (Char 'a')  -> c {kleft  = kd,cursor = p}
+  (Char 'd') -> c {kright  = kd,cursor = p}
+  (MouseButton LeftButton) -> c {fireing = kd , cursor = p}
+  _ -> c
+  where
+    kd = isDown ks
 keyPressMove (EventMotion p) l = l{cursor = p}
 keyPressMove x w = traceShow x w
 
@@ -181,17 +190,16 @@ applyWorld::[WorldOutcome] -> World -> IO World
 applyWorld [] w = return w
 applyWorld (o:os) w = do
   nw <- applyWorld os w
-  fw <- applyWorldOutcome o nw
-  return fw
+  applyWorldOutcome o nw
+
 
 applyWorldOutcome:: WorldOutcome -> World -> IO World
 applyWorldOutcome _ m@Menu{} = return m -- prevents world actions being attempted on menu worlds
 applyWorldOutcome EndGame  w = do
   newWorld <- testPelletWorld (space w) windowWidth windowHeight
-  return $ Menu 0 [("PlayAgain",newWorld)] w
+  return $ Menu 0 [("PlayAgain",newWorld)] w (windowSize w)
 applyWorldOutcome (SetScore n) w@PelletWorld{}  = return w{score = n}
 applyWorldOutcome (IncScore n) w@PelletWorld{}  = return w{score =(score w +n)}
-
 
 handle:: Space -> [Entity] -> ([Entity],World->IO World)
 handle s es = (inerts++newEnts, worldFunc)

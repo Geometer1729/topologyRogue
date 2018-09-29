@@ -9,9 +9,9 @@ genSeveralEnts s es rs = fmap concat $ sequence $ map (genEnt s es) rs
 
 genEnt:: Space -> [Entity] -> EntityGenRule -> IO [Entity]
 genEnt s es (ps,e,ef,lf,mr) = do
-  let current = count es ef
-  if current < length ps then do
-    m <-possibly (ps!!current)
+  let frame = count es ef
+  if frame < length ps then do
+    m <-possibly (ps!!frame)
     if m then do
       loc <- getFiltered (getRandomLoc windowWidth windowHeight) lf
       mot <- getRandomMotion mr

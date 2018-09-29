@@ -70,11 +70,13 @@ data World = PelletWorld {
                     spawnRules    :: [EntityGenRule],
                     score         :: Int,
                     keys          :: Controls,
-                    time          :: Float
+                    time          :: Float,
+                    windowSize    :: (Int,Int)
                   } | Menu {
                     selection     :: Int,
                     buttons       :: [(String,World)],
-                    backGround    :: World -- world to be rendered as backGround not yet implemented wouldn't be hard I just don't know how to do opacity in Gloss
+                    backGround    :: World, -- world to be rendered as backGround not yet implemented wouldn't be hard I just don't know how to do opacity in Gloss
+                    windowSize    :: (Int,Int)
                   }
 instance Show World where
   show PelletWorld{entities = e, score = s} = concat [show e , "Score" , show s]

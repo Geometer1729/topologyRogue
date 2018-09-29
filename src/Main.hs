@@ -1,11 +1,11 @@
 
-import           Debug.Trace
-import           Graphics.Gloss
-import           Graphics.Gloss.Interface.IO.Game
-import           Object
-import           Space
-import           Gameplay
-import Definitions
+import Debug.Trace
+import Graphics.Gloss
+import Graphics.Gloss.Interface.IO.Game
+import Engine.Object
+import Engine.Space
+import Game.Gameplay
+import Engine.Definitions
 
 
 
